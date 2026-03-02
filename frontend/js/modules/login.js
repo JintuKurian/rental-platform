@@ -7,7 +7,7 @@ renderFlashMessage("auth");
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const email = document.getElementById("email").value.trim();
+  const email = document.getElementById("email").value.trim().toLowerCase();
   const password = document.getElementById("password").value.trim();
 
   if (!email || !password) {
