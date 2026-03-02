@@ -4,6 +4,24 @@ import { renderFlashMessage, setFlashMessage, showToast } from "../utils/helpers
 const form = document.getElementById("loginForm");
 renderFlashMessage("auth");
 
+function getFriendlyAuthError(error) {
+  const message = (error?.message || "").toLowerCase();
+
+  if (!navigator.onLine) {
+    return "No internet connection detected. Please reconnect and try again.";
+  }
+
+  if (error?.name === "AbortError" || message.includes("timed out") || message.includes("timeout")) {
+    return "Login request took too long on this network. Please try again.";
+  }
+
+  if (message.includes("failed to fetch") || message.includes("network") || message.includes("cors")) {
+    return "Unable to reach the server from this device. Check mobile network/firewall settings and retry.";
+  }
+
+  return `Login failed: ${error?.message || "unknown error"}`;
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -19,9 +37,28 @@ form.addEventListener("submit", async (event) => {
   submitBtn.disabled = true;
   submitBtn.textContent = "Logging in...";
 
-  const { data, error } = await supabaseClient.from("users").select("*").eq("email", email).eq("password", password).single();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-  if (error || !data) {
+  const { data, error } = await supabaseClient
+    .from("users")
+    .select("user_id, name, email, role")
+    .eq("email", email)
+    .eq("password", password)
+    .limit(1)
+    .abortSignal(controller.signal)
+    .maybeSingle();
+
+  clearTimeout(timeoutId);
+
+  if (error) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Login";
+    showToast(getFriendlyAuthError(error), "error");
+    return;
+  }
+
+  if (!data) {
     submitBtn.disabled = false;
     submitBtn.textContent = "Login";
     showToast("Invalid email or password", "error");
