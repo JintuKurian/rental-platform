@@ -10,7 +10,7 @@ function getFriendlyRegisterError(error) {
     return "No internet connection detected. Please reconnect and try again.";
   }
 
-  if (error?.name === "AbortError" || message.includes("timed out") || message.includes("timeout")) {
+  if (message.includes("timed out") || message.includes("timeout")) {
     return "Registration request took too long on this network. Please try again.";
   }
 
@@ -19,6 +19,10 @@ function getFriendlyRegisterError(error) {
   }
 
   return `Registration failed: ${error?.message || "unknown error"}`;
+}
+
+async function createUser(payload) {
+  return supabaseClient.from("users").insert([payload]);
 }
 
 form.addEventListener("submit", async (event) => {
@@ -38,15 +42,13 @@ form.addEventListener("submit", async (event) => {
   submitBtn.disabled = true;
   submitBtn.textContent = "Registering...";
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
+  let result = await createUser({ name, email, password, role });
+  if (result.error && navigator.onLine) {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    result = await createUser({ name, email, password, role });
+  }
 
-  const { error } = await supabaseClient
-    .from("users")
-    .insert([{ name, email, password, role }])
-    .abortSignal(controller.signal);
-
-  clearTimeout(timeoutId);
+  const { error } = result;
 
   if (error) {
     console.error("Registration failed", error);

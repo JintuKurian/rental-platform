@@ -11,7 +11,7 @@ function getFriendlyAuthError(error) {
     return "No internet connection detected. Please reconnect and try again.";
   }
 
-  if (error?.name === "AbortError" || message.includes("timed out") || message.includes("timeout")) {
+  if (message.includes("timed out") || message.includes("timeout")) {
     return "Login request took too long on this network. Please try again.";
   }
 
@@ -20,6 +20,16 @@ function getFriendlyAuthError(error) {
   }
 
   return `Login failed: ${error?.message || "unknown error"}`;
+}
+
+async function findUserByEmailAndPassword(email, password) {
+  return supabaseClient
+    .from("users")
+    .select("user_id, name, email, role")
+    .eq("email", email)
+    .eq("password", password)
+    .limit(1)
+    .maybeSingle();
 }
 
 form.addEventListener("submit", async (event) => {
@@ -37,19 +47,13 @@ form.addEventListener("submit", async (event) => {
   submitBtn.disabled = true;
   submitBtn.textContent = "Logging in...";
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
+  let result = await findUserByEmailAndPassword(email, password);
+  if (result.error && navigator.onLine) {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    result = await findUserByEmailAndPassword(email, password);
+  }
 
-  const { data, error } = await supabaseClient
-    .from("users")
-    .select("user_id, name, email, role")
-    .eq("email", email)
-    .eq("password", password)
-    .limit(1)
-    .abortSignal(controller.signal)
-    .maybeSingle();
-
-  clearTimeout(timeoutId);
+  const { data, error } = result;
 
   if (error) {
     submitBtn.disabled = false;

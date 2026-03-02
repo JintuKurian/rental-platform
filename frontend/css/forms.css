@@ -19,7 +19,7 @@
   background:
     radial-gradient(circle at 8% 12%, rgba(34, 211, 238, 0.28), transparent 35%),
     radial-gradient(circle at 85% 80%, rgba(129, 140, 248, 0.28), transparent 32%),
-    linear-gradient(135deg, #0f172a, #1e293b 55%, #334155);
+    linear-gradient(135deg, rgba(7, 26, 64, 0.88), rgba(9, 45, 110, 0.7) 55%, rgba(11, 30, 76, 0.88));
   color: #fff;
   display: grid;
   align-content: space-between;
@@ -51,7 +51,7 @@
     radial-gradient(circle at 12% 18%, rgba(244, 114, 182, 0.26), transparent 38%),
     radial-gradient(circle at 88% 10%, rgba(129, 140, 248, 0.28), transparent 40%),
     radial-gradient(circle at 82% 82%, rgba(45, 212, 191, 0.2), transparent 34%),
-    linear-gradient(118deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.36));
+    linear-gradient(118deg, rgba(23, 48, 102, 0.56), rgba(12, 31, 76, 0.34));
   color: var(--text);
   padding: clamp(1.2rem, 2.2vw, 2.4rem);
   border: 1px solid color-mix(in srgb, var(--line) 70%, white 30%);
@@ -195,6 +195,11 @@
 }
 
 @media (max-width: 760px) {
+  .auth-shell { gap: 0.8rem; padding: 0.8rem; }
+  .auth-showcase,
+  .auth-card { border-radius: 18px; }
+  .auth-card { padding: 1rem 0.9rem 1.2rem; }
+  .auth-form { gap: 0.72rem; }
   .form-grid { grid-template-columns: 1fr; }
   .toolbar > * { flex-basis: 100%; }
   .search-bar { grid-template-columns: 1fr; }

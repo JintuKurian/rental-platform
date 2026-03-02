@@ -1,35 +1,21 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap");
 
 :root {
-  --bg: #eef3ff;
-  --surface: rgba(255, 255, 255, 0.62);
-  --surface-soft: rgba(255, 255, 255, 0.45);
-  --surface-strong: rgba(255, 255, 255, 0.78);
-  --text: #0f172a;
-  --text-muted: #51617d;
-  --primary: #4f46e5;
-  --primary-strong: #4338ca;
-  --accent: #0891b2;
+  --bg: #07152f;
+  --surface: rgba(14, 26, 55, 0.42);
+  --surface-soft: rgba(24, 42, 82, 0.3);
+  --surface-strong: rgba(17, 33, 69, 0.6);
+  --text: #e5edf9;
+  --text-muted: #aac0e0;
+  --primary: #6f79ff;
+  --primary-strong: #5d65e8;
+  --accent: #35c8ff;
   --danger: #dc2626;
   --success: #16a34a;
-  --line: rgba(148, 163, 184, 0.35);
-  --shadow: 0 16px 44px rgba(76, 95, 147, 0.2);
+  --line: rgba(183, 214, 255, 0.28);
+  --shadow: 0 24px 50px rgba(2, 10, 29, 0.45);
   --radius-lg: 22px;
   --radius-md: 14px;
-}
-
-:root[data-theme="dark"] {
-  --bg: #090d1a;
-  --surface: rgba(15, 23, 42, 0.62);
-  --surface-soft: rgba(15, 23, 42, 0.5);
-  --surface-strong: rgba(15, 23, 42, 0.75);
-  --text: #e2e8f0;
-  --text-muted: #9aa8c4;
-  --primary: #7c83ff;
-  --primary-strong: #6366f1;
-  --accent: #22d3ee;
-  --line: rgba(148, 163, 184, 0.3);
-  --shadow: 0 24px 60px rgba(2, 6, 23, 0.45);
 }
 
 * { box-sizing: border-box; }
@@ -40,10 +26,10 @@ body.app-body {
   font-family: "Manrope", "Segoe UI", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at 4% 6%, rgba(56, 189, 248, 0.24), transparent 35%),
-    radial-gradient(circle at 90% 0%, rgba(129, 140, 248, 0.3), transparent 35%),
-    radial-gradient(circle at 15% 88%, rgba(45, 212, 191, 0.2), transparent 32%),
-    linear-gradient(130deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12)),
+    radial-gradient(circle at 6% 8%, rgba(56, 189, 248, 0.35), transparent 34%),
+    radial-gradient(circle at 92% 2%, rgba(99, 102, 241, 0.4), transparent 38%),
+    radial-gradient(circle at 22% 82%, rgba(45, 212, 191, 0.28), transparent 34%),
+    linear-gradient(135deg, rgba(12, 30, 66, 0.82), rgba(7, 19, 44, 0.9)),
     var(--bg);
   position: relative;
   overflow-x: hidden;
@@ -95,11 +81,12 @@ p { margin: 0; }
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+.utility-bar:empty { display: none; }
 
 .page-shell { width: min(1400px, 95vw); margin: 1.1rem auto 2rem; }
 .page-card {
-  background: linear-gradient(145deg, color-mix(in srgb, var(--surface) 88%, white 12%), var(--surface));
-  border: 1px solid color-mix(in srgb, var(--line) 80%, white 20%);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--surface) 84%, #92bbff 16%), var(--surface));
+  border: 1px solid color-mix(in srgb, var(--line) 82%, #d9e9ff 18%);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   backdrop-filter: blur(20px) saturate(140%);
@@ -114,7 +101,7 @@ p { margin: 0; }
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(120deg, rgba(255, 255, 255, 0.22), transparent 35%);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.2), transparent 38%);
   pointer-events: none;
 }
 
@@ -155,7 +142,7 @@ input, select, textarea {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.7rem 0.78rem;
-  background: var(--surface-strong);
+  background: color-mix(in srgb, var(--surface-strong) 88%, #0b1f47 12%);
   color: var(--text);
   font: inherit;
 }
@@ -205,25 +192,9 @@ th { color: var(--text); background: var(--surface-soft); font-weight: 700; }
   table { min-width: 560px; }
   .toast-stack { left: 1rem; right: 1rem; }
   .toast { max-width: 100%; }
-}
-
-
-.settings-menu { margin-left: auto; position: relative; }
-.settings-menu > summary { list-style: none; }
-.settings-menu > summary::-webkit-details-marker { display: none; }
-.settings-menu-panel {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.45rem);
-  min-width: 190px;
-  padding: 0.6rem;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: var(--surface-strong);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  box-shadow: var(--shadow);
-  z-index: 50;
+  .page-shell { margin-top: 0.8rem; }
+  body.app-body::before,
+  body.app-body::after { filter: blur(55px); }
 }
 
 .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.8rem; }
