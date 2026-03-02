@@ -10,14 +10,13 @@
 </head>
 <body class="app-body">
 <header class="landing-hero">
-  <nav class="landing-nav glass-panel">
+  <nav class="landing-nav shell-panel">
     <strong class="brand-mark">🏠 Rental Platform</strong>
     <div class="landing-links">
-      <a href="#">Home</a>
-      <a href="#aboutSection">About</a>
-      <a href="#recommendedGrid">Discover</a>
-      <a href="#newHomesGrid">New homes</a>
-      <a href="#termsSection">Terms & Conditions</a>
+      <a href="./index.html">Home</a>
+      <a href="./pages/about.html">About</a>
+      <a href="./pages/discover.html">Discover</a>
+      <a href="./pages/terms.html">Terms & Conditions</a>
     </div>
     <div class="actions-row nav-actions">
       <a class="btn btn-secondary" href="./pages/login.html">Login</a>
@@ -27,29 +26,21 @@
 
   <div class="landing-grid">
     <div>
-      <span class="hero-chip">✨ Verified listings · Instant responses</span>
-      <h1>Live in a <span>Liquid Glass</span> rental experience.</h1>
-      <p>Discover verified rentals, compare neighborhoods, and connect with trusted owners in minutes through a cleaner, modern, and animated home search.</p>
-
-      <div class="search-bar glass-panel">
-        <input id="homeCity" type="text" placeholder="Search by city" />
-        <select id="homeStatus"><option value="">Any status</option><option value="Available">Available</option><option value="Rented">Rented</option></select>
-        <input id="homeBudget" type="number" placeholder="Max rent" />
-        <button id="homeSearch" class="btn btn-primary" type="button">Search</button>
-      </div>
+      <span class="hero-chip">Curated rentals · Verified owners</span>
+      <h1>Find your next home in a <span>premium rental workspace</span>.</h1>
+      <p>Designed for speed, clarity, and trust. Search listings, compare locations, and move from discovery to agreement with confidence.</p>
 
       <div class="actions-row">
-        <a class="btn btn-primary" href="./pages/register.html">Get Started</a>
-        <a class="btn btn-secondary" href="#recommendedGrid">Explore listings →</a>
+        <a class="btn btn-primary" href="./pages/discover.html">Explore listings</a>
+        <a class="btn btn-secondary" href="./pages/about.html">See platform benefits</a>
       </div>
     </div>
 
-    <aside class="hero-preview glass-panel">
-      <p class="hero-preview-label">Featured neighborhood</p>
-      <h3>Downtown Riverside</h3>
-      <p class="property-meta">1,200+ active users viewed this week.</p>
+    <aside class="hero-preview shell-panel">
+      <p class="hero-preview-label">Platform highlights</p>
+      <h3>Built for tenants, owners, and admins</h3>
       <div class="hero-preview-card">
-        <p>"Booked my apartment in 48 hours with complete trust in the owner profile."</p>
+        <p>Separate workflows, cleaner navigation, and role-first dashboards that keep each task focused.</p>
       </div>
     </aside>
   </div>
@@ -58,56 +49,22 @@
 <main class="page-shell content-stack">
   <section class="page-card">
     <h2 class="section-title">Popular locations</h2>
-    <p class="section-subtitle">City hotspots where tenants are renting quickly.</p>
+    <p class="section-subtitle">Live market view from active listings.</p>
     <div id="popularLocations" class="actions-row"></div>
-  </section>
-
-  <section class="page-card">
-    <h2 class="section-title">Recommended properties</h2>
-    <p class="section-subtitle">Handpicked listings with complete details and quality photos.</p>
-    <div id="recommendedGrid" class="property-grid"></div>
-  </section>
-
-  <section class="page-card">
-    <h2 class="section-title">Newly added homes</h2>
-    <p class="section-subtitle">Fresh inventory uploaded by owners this week.</p>
-    <div id="newHomesGrid" class="property-grid"></div>
-  </section>
-
-  <section id="aboutSection" class="page-card">
-    <h2 class="section-title">About Rental Platform</h2>
-    <p class="section-subtitle">We help tenants, owners, and admins collaborate in one transparent system with verified profiles, agreement records, and maintenance tracking.</p>
-    <div class="kpi-grid">
-      <article class="kpi-card"><p class="kpi-label">For tenants</p><p>Discover verified homes and contact owners quickly.</p></article>
-      <article class="kpi-card"><p class="kpi-label">For owners</p><p>Publish listings, screen tenant details, and manage agreements.</p></article>
-      <article class="kpi-card"><p class="kpi-label">For admins</p><p>Track users, rental activity, and platform health in one dashboard.</p></article>
-    </div>
-  </section>
-
-  <section id="termsSection" class="page-card">
-    <h2 class="section-title">Terms & Conditions</h2>
-    <ul class="terms-list">
-      <li>All listings must include accurate address, rent, and property details.</li>
-      <li>Users are responsible for submitting valid identity and profile information.</li>
-      <li>Payments and agreements should be recorded through the platform for traceability.</li>
-      <li>Harassment, fraudulent activity, and spam listings may lead to account suspension.</li>
-      <li>By using this service, you agree to follow local rental laws and regulations.</li>
-    </ul>
   </section>
 </main>
 
-<footer class="site-footer page-shell glass-panel">
+<footer class="site-footer page-shell shell-panel">
   <p>© <span id="year"></span> Rental Platform · Transparent renting for everyone.</p>
   <div class="landing-links">
-    <a href="#">Home</a>
-    <a href="#aboutSection">About</a>
-    <a href="#termsSection">Terms</a>
+    <a href="./index.html">Home</a>
+    <a href="./pages/about.html">About</a>
+    <a href="./pages/discover.html">Discover</a>
     <a href="./pages/login.html">Login</a>
   </div>
 </footer>
 
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
-
 <script type="module" src="./js/modules/home.js"></script>
 </body>
 </html>

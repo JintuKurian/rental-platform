@@ -1,5 +1,3 @@
-import { logout } from "../core/auth.js";
-
 function getCurrentUser() {
   const raw = localStorage.getItem("user");
   if (!raw) return null;
@@ -53,8 +51,9 @@ function getNavByRole(role) {
 
   return [
     ["Home", "index.html"],
-    ["Login", "pages/login.html"],
-    ["Register", "pages/register.html"]
+    ["About", "pages/about.html"],
+    ["Discover", "pages/discover.html"],
+    ["Terms", "pages/terms.html"]
   ];
 }
 
@@ -74,17 +73,15 @@ function renderUtilityBar() {
   const links = getNavByRole(role).map((link) => buildLink(prefix, link)).join("");
 
   utility.innerHTML = `
-    <div class="app-nav glass-panel">
+    <div class="app-nav shell-panel">
       <a class="app-brand" href="${prefix}index.html">🏠 Rental Platform</a>
       <nav class="app-links">${links}</nav>
       <div class="app-user-actions">
-        ${user ? `<span class="user-chip">${user.name || "User"}</span><button id="appShellLogout" class="btn btn-secondary" type="button">Logout</button>` : `<a class="btn btn-secondary" href="${prefix}pages/login.html">Login</a><a class="btn btn-primary" href="${prefix}pages/register.html">Sign up</a>`}
+        ${user ? `<a class="btn btn-secondary" href="${prefix}pages/profile.html">My profile</a>` : `<a class="btn btn-secondary" href="${prefix}pages/login.html">Login</a><a class="btn btn-primary" href="${prefix}pages/register.html">Sign up</a>`}
       </div>
     </div>
   `;
 
-  const logoutButton = document.getElementById("appShellLogout");
-  if (logoutButton) logoutButton.addEventListener("click", logout);
 }
 
 renderUtilityBar();

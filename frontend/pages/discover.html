@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Discover Rentals | Rental Platform</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/forms.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="app-body">
+  <div class="utility-bar"></div>
+
+  <main class="page-shell content-stack">
+    <section class="page-card">
+      <h1 class="section-title">Discover properties</h1>
+      <p class="section-subtitle">Search by city, status, and budget to see active listings.</p>
+      <div class="search-bar shell-panel">
+        <input id="homeCity" type="text" placeholder="Search by city" />
+        <select id="homeStatus"><option value="">Any status</option><option value="Available">Available</option><option value="Rented">Rented</option></select>
+        <input id="homeBudget" type="number" placeholder="Max rent" />
+        <button id="homeSearch" class="btn btn-primary" type="button">Search</button>
+      </div>
+    </section>
+
+    <section class="page-card">
+      <h2 class="section-title">Recommended properties</h2>
+      <div id="recommendedGrid" class="property-grid"></div>
+    </section>
+
+    <section class="page-card">
+      <h2 class="section-title">Newly added homes</h2>
+      <div id="newHomesGrid" class="property-grid"></div>
+    </section>
+  </main>
+
+  <script type="module" src="../js/modules/appShell.js"></script>
+  <script type="module" src="../js/modules/home.js"></script>
+</body>
+</html>

@@ -7,11 +7,11 @@ const popularLocations = document.getElementById("popularLocations");
 const homeSearch = document.getElementById("homeSearch");
 
 const FALLBACK_IMG = "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=900&q=80";
+const basePrefix = window.location.pathname.includes("/pages/") ? "../" : "./";
 
 function renderPropertyCard(property) {
   const image = property.property_images?.[0]?.image_url || FALLBACK_IMG;
   const ownerName = property.owners?.users?.name || "Owner";
-  const ownerEmail = property.owners?.users?.email || "N/A";
 
   return `
     <article class="property-card">
@@ -21,10 +21,10 @@ function renderPropertyCard(property) {
         <p class="property-meta">${property.city || "Unknown city"}</p>
         <p><strong>${formatCurrency(property.rent_amount)}</strong> / month</p>
         <p class="property-meta">Availability: ${property.status || "Unknown"}</p>
-        <p class="property-meta">Owner: ${ownerName} (${ownerEmail})</p>
+        <p class="property-meta">Listed by: ${ownerName}</p>
         <div class="actions-row">
-          <a class="btn btn-secondary" href="../pages/property-details.html?id=${property.property_id}">View</a>
-          <a class="btn btn-primary" href="../pages/login.html">Contact owner</a>
+          <a class="btn btn-secondary" href="${basePrefix}pages/property-details.html?id=${property.property_id}">View</a>
+          <a class="btn btn-primary" href="${basePrefix}pages/login.html">Contact owner</a>
         </div>
       </div>
     </article>
@@ -32,22 +32,23 @@ function renderPropertyCard(property) {
 }
 
 function renderLocationChips(properties) {
+  if (!popularLocations) return;
   const countByCity = properties.reduce((acc, property) => {
     const city = property.city || "Other";
     acc[city] = (acc[city] || 0) + 1;
     return acc;
   }, {});
 
-  const topCities = Object.entries(countByCity).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const topCities = Object.entries(countByCity).sort((a, b) => b[1] - a[1]).slice(0, 8);
   popularLocations.innerHTML = topCities.length
     ? topCities.map(([city, count]) => `<span class="role-chip">${city} • ${count} homes</span>`).join("")
     : "<div class='empty-state'>No locations available right now.</div>";
 }
 
 async function loadHomeListings() {
-  const city = document.getElementById("homeCity").value.trim();
-  const status = document.getElementById("homeStatus").value;
-  const maxBudget = Number(document.getElementById("homeBudget").value || 0);
+  const city = document.getElementById("homeCity")?.value.trim() || "";
+  const status = document.getElementById("homeStatus")?.value || "";
+  const maxBudget = Number(document.getElementById("homeBudget")?.value || 0);
 
   const { data, error } = await listProperties({ city, status });
   if (error) {
@@ -59,12 +60,16 @@ async function loadHomeListings() {
 
   renderLocationChips(properties);
 
-  const recommended = properties.filter((p) => p.status === "Available").slice(0, 8);
-  const newHomes = [...properties].slice(0, 4);
+  if (recommendedGrid) {
+    const recommended = properties.filter((p) => p.status === "Available").slice(0, 8);
+    recommendedGrid.innerHTML = recommended.length ? recommended.map(renderPropertyCard).join("") : "<div class='empty-state'>No recommendations found. Try changing your filters.</div>";
+  }
 
-  recommendedGrid.innerHTML = recommended.length ? recommended.map(renderPropertyCard).join("") : "<div class='empty-state'>No recommendations found. Try changing your filters.</div>";
-  newHomesGrid.innerHTML = newHomes.length ? newHomes.map(renderPropertyCard).join("") : "<div class='empty-state'>No newly added homes yet.</div>";
+  if (newHomesGrid) {
+    const newHomes = [...properties].slice(0, 6);
+    newHomesGrid.innerHTML = newHomes.length ? newHomes.map(renderPropertyCard).join("") : "<div class='empty-state'>No newly added homes yet.</div>";
+  }
 }
 
-homeSearch.addEventListener("click", loadHomeListings);
-loadHomeListings();
+if (homeSearch) homeSearch.addEventListener("click", loadHomeListings);
+if (recommendedGrid || newHomesGrid || popularLocations) loadHomeListings();
