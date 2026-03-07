@@ -18,22 +18,22 @@
       <div class="search-bar shell-panel discover-filter-card">
         <div class="discover-filter-head">
           <h3>Filter listings</h3>
-          <p>Narrow your search to find homes that match your needs.</p>
+          <p>Use location, availability, and budget to find the right rental faster.</p>
         </div>
         <div class="discover-filter-grid">
-          <div>
+          <div class="discover-filter-field">
             <label for="homeCity">City</label>
             <input id="homeCity" type="text" placeholder="e.g. Nairobi" />
           </div>
-          <div>
+          <div class="discover-filter-field">
             <label for="homeStatus">Status</label>
             <select id="homeStatus"><option value="">Any status</option><option value="Available">Available</option><option value="Rented">Rented</option></select>
           </div>
-          <div>
+          <div class="discover-filter-field">
             <label for="homeBudget">Budget (Max)</label>
-            <input id="homeBudget" type="number" placeholder="e.g. 1200" />
+            <input id="homeBudget" type="text" inputmode="numeric" placeholder="e.g. 120000" />
           </div>
-          <div class="toolbar-action-wrap">
+          <div class="toolbar-action-wrap discover-filter-action">
             <button id="homeSearch" class="btn btn-primary" type="button">Search listings</button>
           </div>
         </div>

@@ -62,7 +62,7 @@ async function loadHomeListings() {
 
   if (recommendedGrid) {
     const recommended = properties.filter((p) => p.status === "Available").slice(0, 8);
-    recommendedGrid.innerHTML = recommended.length ? recommended.map(renderPropertyCard).join("") : "<div class='empty-state'><p class='empty-state-icon' aria-hidden='true'>🔍</p><h4>No matching properties</h4><p>Update search filters to view available listings.</p><button class='btn btn-primary' type='button' id='retryDiscoverSearch'>Search Again</button></div>";
+    recommendedGrid.innerHTML = recommended.length ? recommended.map(renderPropertyCard).join("") : "<div class='empty-state'><p class='empty-state-icon' aria-hidden='true'>🔍</p><h4>No properties match these filters</h4><p>Try a different city, choose another status, or increase your budget to see more listings.</p><button class='btn btn-primary' type='button' id='retryDiscoverSearch'>Search again</button></div>";
   }
 
   if (newHomesGrid) {
