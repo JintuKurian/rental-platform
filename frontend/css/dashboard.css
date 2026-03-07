@@ -38,7 +38,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  background: #eef2ff;
+  background: #f1f5f9;
 }
 
 .kpi-label {
@@ -64,8 +64,10 @@
 .split-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1rem; }
 .callout { padding: 0.9rem; border-radius: 12px; background: #f8fafc; border: 1px solid var(--line); color: var(--text); box-shadow: var(--shadow); }
 
-.gallery-preview { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.5rem; margin-top: 0.7rem; }
-.gallery-preview img { width: 100%; border-radius: 10px; border: 1px solid var(--line); height: 88px; object-fit: cover; }
+.gallery-preview { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.7rem; margin-top: 0.7rem; }
+.gallery-item { position: relative; margin: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #fff; box-shadow: var(--shadow); }
+.gallery-item img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.gallery-delete { position: absolute; top: 0.45rem; right: 0.45rem; border: 1px solid #fecaca; background: rgba(255,255,255,0.95); color: #b91c1c; border-radius: 999px; width: 30px; height: 30px; cursor: pointer; }
 
 @media (max-width: 1020px) {
   .dashboard-layout { grid-template-columns: 1fr; }

@@ -15,6 +15,8 @@ const ownerQuickPropertyForm = document.getElementById("ownerQuickPropertyForm")
 const ownerQuickImageInput = document.getElementById("quickPropertyImages");
 const ownerQuickGalleryPreview = document.getElementById("ownerQuickGalleryPreview");
 
+let selectedQuickImages = [];
+
 function setProfileStatus(isComplete) {
   ownerProfileStatus.textContent = isComplete ? "Complete" : "Incomplete";
 }
@@ -31,10 +33,24 @@ function prefillOwnerProfile(profile) {
   document.getElementById("ownerType").value = profile.owner_type || "Local";
 }
 
+function removeQuickImage(index) {
+  selectedQuickImages = selectedQuickImages.filter((_, imageIndex) => imageIndex !== index);
+  renderQuickImagePreviews();
+}
+
 function renderQuickImagePreviews() {
-  const files = Array.from(ownerQuickImageInput.files || []);
-  ownerQuickGalleryPreview.innerHTML = files.length
-    ? files.map((file) => `<img src="${URL.createObjectURL(file)}" alt="upload preview" />`).join("")
+  ownerQuickGalleryPreview.innerHTML = selectedQuickImages.length
+    ? selectedQuickImages
+      .map((file, index) => {
+        const url = URL.createObjectURL(file);
+        return `
+          <figure class="gallery-item">
+            <img src="${url}" alt="upload preview ${index + 1}" />
+            <button class="gallery-delete" type="button" data-index="${index}" aria-label="Delete image">🗑</button>
+          </figure>
+        `;
+      })
+      .join("")
     : "";
 }
 
@@ -54,7 +70,7 @@ async function loadOwnerSummary() {
     propertyCountElement.textContent = "0";
     rentedCountElement.textContent = "0";
     incomeElement.textContent = formatCurrency(0);
-    preview.innerHTML = "<div class='empty-state'>No properties yet. Add your first listing to start.</div>";
+    preview.innerHTML = "<div class='empty-state'><h4>Welcome, owner 👋</h4><p>Get started by adding your first premium property listing.</p><a class='btn btn-primary' href='../pages/add-property.html'>Add your first property</a></div>";
     return;
   }
 
@@ -69,7 +85,7 @@ async function loadOwnerSummary() {
 
   preview.innerHTML = rows.length
     ? rows.slice(0, 3).map((item) => `<article class='property-card'><img src='${item.property_images?.[0]?.image_url || "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80"}' alt='property'/><div class='property-body'><h4>${item.title || "Untitled"}</h4><p class='property-meta'>${item.city || "-"}</p><p><strong>${formatCurrency(item.rent_amount)}</strong></p></div></article>`).join("")
-    : "<div class='empty-state'>No listings found.</div>";
+    : "<div class='empty-state'><h4>No listings yet</h4><p>Create your first property listing and start receiving tenant interest.</p><a class='btn btn-primary' href='../pages/add-property.html'>Add your first property</a></div>";
 }
 
 ownerProfileForm.addEventListener("submit", async (event) => {
@@ -98,7 +114,16 @@ ownerProfileForm.addEventListener("submit", async (event) => {
   loadOwnerSummary();
 });
 
-ownerQuickImageInput.addEventListener("change", renderQuickImagePreviews);
+ownerQuickImageInput.addEventListener("change", () => {
+  selectedQuickImages = Array.from(ownerQuickImageInput.files || []);
+  renderQuickImagePreviews();
+});
+
+ownerQuickGalleryPreview.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement) || !target.classList.contains("gallery-delete")) return;
+  removeQuickImage(Number(target.dataset.index));
+});
 
 ownerQuickPropertyForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -143,8 +168,7 @@ ownerQuickPropertyForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  const files = Array.from(ownerQuickImageInput.files || []);
-  for (const file of files) {
+  for (const file of selectedQuickImages) {
     const uploadResult = await uploadPropertyImage(file, data.property_id);
     if (uploadResult.error) {
       console.error("Image upload failed", uploadResult.error);
@@ -153,6 +177,7 @@ ownerQuickPropertyForm.addEventListener("submit", async (event) => {
 
   showToast("Property published successfully", "success");
   ownerQuickPropertyForm.reset();
+  selectedQuickImages = [];
   ownerQuickGalleryPreview.innerHTML = "";
   submitBtn.disabled = false;
   submitBtn.textContent = "Publish Property";

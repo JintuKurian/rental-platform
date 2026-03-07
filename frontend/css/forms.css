@@ -34,13 +34,20 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  margin-top: 2rem;
+  margin-top: 0.1rem;
   font-weight: 500;
+  color: var(--text-muted);
 }
 
 .checkbox-inline input[type="checkbox"] {
   width: auto;
   margin: 0;
+}
+
+.checkbox-inline label {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
 }
 .toolbar { display: flex; gap: 0.7rem; flex-wrap: wrap; }
 .toolbar > * { flex: 1 1 180px; }
@@ -75,7 +82,7 @@
 
 .property-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
 .property-card { border-radius: 12px; overflow: hidden; }
-.property-card img { width: 100%; height: 180px; object-fit: cover; display: block; }
+.property-card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
 .property-body { padding: 0.85rem; display: grid; gap: 0.35rem; }
 .property-meta { color: var(--text-secondary); font-size: 0.88rem; }
 

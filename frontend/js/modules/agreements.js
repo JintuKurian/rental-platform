@@ -11,10 +11,6 @@ const adminForm = document.getElementById("agreementForm");
 const propertySelect = document.getElementById("propertyId");
 const tenantSelect = document.getElementById("tenantId");
 const agreementTableBody = document.getElementById("agreementTableBody");
-const roleTag = document.getElementById("roleTag");
-
-roleTag.textContent = `Logged in as: ${user.role}`;
-
 function canCreateAgreement() {
   return user.role === "admin";
 }

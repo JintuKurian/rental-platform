@@ -54,6 +54,13 @@ function getNavByRole(role) {
   ];
 }
 
+function getRoleBadgeClass(role) {
+  if (role === "admin") return "role-admin";
+  if (role === "owner") return "role-owner";
+  if (role === "tenant") return "role-tenant";
+  return "role-chip";
+}
+
 function buildLink(prefix, [label, href]) {
   const fullHref = `${prefix}${href}`;
   const active = window.location.pathname.endsWith(`/${href}`) || window.location.pathname.endsWith(href);
@@ -69,17 +76,21 @@ function renderUtilityBar() {
   const prefix = getBasePrefix();
   const links = getNavByRole(role).map((link) => buildLink(prefix, link)).join("");
   const initials = user?.name ? user.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() : "U";
+  const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Guest";
 
   utility.innerHTML = `
     <div class="app-nav shell-panel">
       <a class="app-brand" href="${prefix}index.html">🏠 Rental Platform</a>
       <nav class="app-links">${links}</nav>
       <div class="app-user-actions">
-        ${user ? `<a class="app-profile-link" href="${prefix}pages/profile.html"><span class="app-avatar" aria-hidden="true">${initials}</span><span>Profile</span></a>` : `<a class="btn btn-secondary" href="${prefix}pages/login.html">Login</a><a class="btn btn-primary" href="${prefix}pages/register.html">Sign up</a>`}
+        ${
+          user
+            ? `<a class="app-profile-link" href="${prefix}pages/profile.html"><span class="app-avatar" aria-hidden="true">${initials}</span><span class="app-profile-meta"><span>Profile</span><span class="role-chip ${getRoleBadgeClass(role)}">${roleLabel}</span></span></a>`
+            : `<a class="btn btn-secondary" href="${prefix}pages/login.html">Login</a><a class="btn btn-primary" href="${prefix}pages/register.html">Sign up</a>`
+        }
       </div>
     </div>
   `;
-
 }
 
 renderUtilityBar();

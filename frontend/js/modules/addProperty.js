@@ -11,11 +11,38 @@ const form = document.getElementById("propertyForm");
 const imageInput = document.getElementById("propertyImages");
 const galleryPreview = document.getElementById("galleryPreview");
 
-imageInput.addEventListener("change", () => {
-  const files = Array.from(imageInput.files || []);
-  galleryPreview.innerHTML = files.length
-    ? files.map((file) => `<img src="${URL.createObjectURL(file)}" alt="upload preview" />`).join("")
+let selectedImages = [];
+
+function removeSelectedImage(index) {
+  selectedImages = selectedImages.filter((_, imageIndex) => imageIndex !== index);
+  renderSelectedImages();
+}
+
+function renderSelectedImages() {
+  galleryPreview.innerHTML = selectedImages.length
+    ? selectedImages
+      .map((file, index) => {
+        const url = URL.createObjectURL(file);
+        return `
+          <figure class="gallery-item">
+            <img src="${url}" alt="upload preview ${index + 1}" />
+            <button class="gallery-delete" type="button" data-index="${index}" aria-label="Delete image">🗑</button>
+          </figure>
+        `;
+      })
+      .join("")
     : "";
+}
+
+imageInput.addEventListener("change", () => {
+  selectedImages = Array.from(imageInput.files || []);
+  renderSelectedImages();
+});
+
+galleryPreview.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement) || !target.classList.contains("gallery-delete")) return;
+  removeSelectedImage(Number(target.dataset.index));
 });
 
 form.addEventListener("submit", async (event) => {
@@ -62,8 +89,7 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  const files = Array.from(imageInput.files || []);
-  for (const file of files) {
+  for (const file of selectedImages) {
     const uploadResult = await uploadPropertyImage(file, data.property_id);
     if (uploadResult.error) {
       console.error("Image upload failed", uploadResult.error);
@@ -72,6 +98,7 @@ form.addEventListener("submit", async (event) => {
 
   showToast("Property published successfully", "success");
   form.reset();
+  selectedImages = [];
   galleryPreview.innerHTML = "";
   submitBtn.disabled = false;
   submitBtn.textContent = "Publish Property";
