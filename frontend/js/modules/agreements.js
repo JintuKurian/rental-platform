@@ -1,8 +1,8 @@
 import { requireUser } from "../core/auth.js";
 import { getTenants } from "../services/userService.js";
 import { listProperties } from "../services/propertyService.js";
-import { createAgreement, listAgreements, updateAgreementStatus } from "../services/agreementService.js";
-import { formatCurrency, formatDate } from "../utils/helpers.js";
+import { createAgreement, listAgreements, updateAgreementStatus, updateAgreement, deleteAgreement } from "../services/agreementService.js";
+import { formatCurrency, formatDate, showToast } from "../utils/helpers.js";
 
 const user = requireUser(["admin", "owner", "tenant"]);
 if (!user) throw new Error("Unauthorized");
@@ -11,8 +11,29 @@ const adminForm = document.getElementById("agreementForm");
 const propertySelect = document.getElementById("propertyId");
 const tenantSelect = document.getElementById("tenantId");
 const agreementTableBody = document.getElementById("agreementTableBody");
+
+const EDIT_REQUEST_KEY = "agreementEditRequests";
+
 function canCreateAgreement() {
   return user.role === "admin";
+}
+
+function getEditRequests() {
+  try {
+    return JSON.parse(localStorage.getItem(EDIT_REQUEST_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveEditRequests(requests) {
+  localStorage.setItem(EDIT_REQUEST_KEY, JSON.stringify(requests));
+}
+
+function getAgreementDisplayStatus(agreement) {
+  const requests = getEditRequests();
+  if (requests[agreement.agreement_id]?.status === "PENDING_EDIT") return "PENDING_EDIT";
+  return agreement.agreement_status || "-";
 }
 
 if (!canCreateAgreement()) {
@@ -52,6 +73,33 @@ function filterByRole(agreements) {
   return agreements.filter((agreement) => agreement.tenants?.user_id === user.user_id);
 }
 
+function actionButtons(agreement) {
+  const isActive = (agreement.agreement_status || "").toUpperCase() === "ACTIVE";
+  const requests = getEditRequests();
+  const pending = requests[agreement.agreement_id]?.status === "PENDING_EDIT";
+  const isOwner = user.role === "owner" && agreement.properties?.owners?.user_id === user.user_id;
+  const isTenant = user.role === "tenant" && agreement.tenants?.user_id === user.user_id;
+
+  const statusAction = user.role === "admin"
+    ? `<button class="btn btn-secondary statusBtn" data-id="${agreement.agreement_id}">Mark Completed</button>`
+    : "";
+
+  let editAction = `<button class="btn btn-secondary editAgreementBtn" data-id="${agreement.agreement_id}">Edit</button>`;
+  if (isActive && !isOwner) {
+    editAction = "";
+  }
+
+  const deleteDisabled = isActive ? "disabled" : "";
+  const deleteTitle = isActive ? "title='Active agreements cannot be deleted.'" : "";
+  const deleteAction = `<button class="btn btn-danger deleteAgreementBtn" data-id="${agreement.agreement_id}" ${deleteDisabled} ${deleteTitle}>Delete</button>`;
+
+  const approveAction = pending && isTenant
+    ? `<button class="btn btn-primary approveEditBtn" data-id="${agreement.agreement_id}">Approve Edit</button>`
+    : "";
+
+  return [statusAction, editAction, deleteAction, approveAction].filter(Boolean).join(" ");
+}
+
 async function loadAgreementList() {
   const { data, error } = await listAgreements();
   if (error) {
@@ -72,31 +120,122 @@ async function loadAgreementList() {
           <td>${agreement.tenants?.users?.name || "-"}</td>
           <td>${formatDate(agreement.start_date)} to ${formatDate(agreement.end_date)}</td>
           <td>${formatCurrency(agreement.monthly_rent)}</td>
-          <td>${agreement.agreement_status || "-"}</td>
-          <td>${user.role === "admin" ? `<button class="btn btn-secondary statusBtn" data-id="${agreement.agreement_id}">Mark Completed</button>` : "-"}</td>
+          <td>${getAgreementDisplayStatus(agreement)}</td>
+          <td>${actionButtons(agreement)}</td>
         </tr>
       `
       )
       .join("")
-    : "<tr><td colspan='7'>No agreements found.</td></tr>";
+    : "<tr><td colspan='7'><div class='empty-state card'><h3>No agreements yet</h3><p>Create a rental agreement to get started.</p></div></td></tr>";
+}
+
+async function requestAgreementEdit(agreementId) {
+  const newRent = prompt("Enter updated monthly rent:");
+  if (!newRent) return;
+
+  const { data, error } = await listAgreements();
+  if (error) {
+    showToast("Failed to load agreement", "error");
+    return;
+  }
+
+  const agreement = (data || []).find((item) => item.agreement_id === agreementId);
+  if (!agreement) return;
+
+  const isActive = (agreement.agreement_status || "").toUpperCase() === "ACTIVE";
+  if (isActive) {
+    if (user.role !== "owner") {
+      showToast("Active agreement edits must be requested by the owner.", "error");
+      return;
+    }
+
+    const requests = getEditRequests();
+    requests[agreementId] = {
+      status: "PENDING_EDIT",
+      requestedBy: "owner",
+      payload: { monthly_rent: Number(newRent) }
+    };
+    saveEditRequests(requests);
+    showToast("Edit request submitted. Waiting for tenant approval.", "success");
+    loadAgreementList();
+    return;
+  }
+
+  const { error: updateError } = await updateAgreement(agreementId, { monthly_rent: Number(newRent) });
+  if (updateError) {
+    showToast("Failed to update agreement", "error");
+    return;
+  }
+
+  showToast("Agreement updated", "success");
+  loadAgreementList();
+}
+
+async function approveAgreementEdit(agreementId) {
+  const requests = getEditRequests();
+  const request = requests[agreementId];
+  if (!request || request.status !== "PENDING_EDIT") return;
+
+  const { error } = await updateAgreement(agreementId, request.payload);
+  if (error) {
+    showToast("Failed to apply agreement edit", "error");
+    return;
+  }
+
+  delete requests[agreementId];
+  saveEditRequests(requests);
+  showToast("Agreement edit approved and applied", "success");
+  loadAgreementList();
+}
+
+async function handleDeleteAgreement(agreementId) {
+  const { data, error } = await listAgreements();
+  if (error) {
+    showToast("Failed to load agreement", "error");
+    return;
+  }
+
+  const agreement = (data || []).find((item) => item.agreement_id === agreementId);
+  if (!agreement) return;
+
+  const isActive = (agreement.agreement_status || "").toUpperCase() === "ACTIVE";
+  if (isActive) {
+    showToast("Active agreements cannot be deleted", "error");
+    return;
+  }
+
+  if (!confirm("Are you sure you want to delete this agreement?")) return;
+
+  const { error: deleteError } = await deleteAgreement(agreementId);
+  if (deleteError) {
+    showToast("Failed to delete agreement", "error");
+    return;
+  }
+
+  showToast("Agreement deleted", "success");
+  loadAgreementList();
 }
 
 agreementTableBody.addEventListener("click", async (event) => {
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
-  if (!target.classList.contains("statusBtn")) return;
 
   const id = Number(target.dataset.id);
   if (!id) return;
 
-  const { error } = await updateAgreementStatus(id, "Completed");
-  if (error) {
-    console.error(error);
-    alert("Failed to update status");
-    return;
+  if (target.classList.contains("statusBtn")) {
+    const { error } = await updateAgreementStatus(id, "Completed");
+    if (error) {
+      console.error(error);
+      alert("Failed to update status");
+      return;
+    }
+    loadAgreementList();
   }
 
-  loadAgreementList();
+  if (target.classList.contains("editAgreementBtn")) await requestAgreementEdit(id);
+  if (target.classList.contains("approveEditBtn")) await approveAgreementEdit(id);
+  if (target.classList.contains("deleteAgreementBtn")) await handleDeleteAgreement(id);
 });
 
 adminForm.addEventListener("submit", async (event) => {

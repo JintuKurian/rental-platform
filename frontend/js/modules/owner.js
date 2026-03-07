@@ -131,8 +131,10 @@ ownerProfileForm.addEventListener("submit", async (event) => {
   loadOwnerSummary();
 });
 
-ownerQuickImageInput.addEventListener("change", () => {
-  selectedQuickImages = Array.from(ownerQuickImageInput.files || []);
+ownerQuickImageInput.addEventListener("change", (event) => {
+  const files = Array.from(event.target.files || []);
+  selectedQuickImages = [...selectedQuickImages, ...files];
+  ownerQuickImageInput.value = "";
   renderQuickImagePreviews();
 });
 

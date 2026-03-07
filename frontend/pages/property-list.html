@@ -20,23 +20,21 @@
         <p class="section-subtitle">Filter by city and status to quickly manage your own listings.</p>
       </div>
 
-      <div class="toolbar">
-        <input id="cityFilter" type="text" placeholder="Search city" />
-        <select id="statusFilter"><option value="">All status</option><option value="Available">Available</option><option value="Rented">Rented</option><option value="Inactive">Inactive</option></select>
-        <button id="searchBtn" class="btn btn-primary" type="button">Search</button>
+      <div class="toolbar toolbar-labeled">
+        <div>
+          <label for="cityFilter">City</label>
+          <input id="cityFilter" type="text" />
+        </div>
+        <div>
+          <label for="statusFilter">Status</label>
+          <select id="statusFilter"><option value="">All status</option><option value="Available">Available</option><option value="Rented">Rented</option><option value="Inactive">Inactive</option></select>
+        </div>
+        <div class="toolbar-action-wrap">
+          <button id="searchBtn" class="btn btn-primary" type="button">Search</button>
+        </div>
       </div>
 
-      <div id="propertyCards" class="property-grid"></div>
-    </section>
-
-    <section class="page-card data-table-card">
-      <h3 class="section-title">Management view</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>ID</th><th>Title</th><th>Location</th><th>Rent</th><th>Status</th><th>Owner</th><th>Actions</th></tr></thead>
-          <tbody id="propertyTableBody"></tbody>
-        </table>
-      </div>
+      <div id="propertyCards" class="properties-grid"></div>
     </section>
   </main>
   <script type="module" src="../js/modules/propertyList.js"></script>

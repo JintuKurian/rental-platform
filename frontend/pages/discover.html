@@ -16,10 +16,21 @@
       <h1 class="section-title">Discover properties</h1>
       <p class="section-subtitle">Search by city, status, and budget to see active listings.</p>
       <div class="search-bar shell-panel">
-        <input id="homeCity" type="text" placeholder="Search by city" />
-        <select id="homeStatus"><option value="">Any status</option><option value="Available">Available</option><option value="Rented">Rented</option></select>
-        <input id="homeBudget" type="number" placeholder="Max rent" />
-        <button id="homeSearch" class="btn btn-primary" type="button">Search</button>
+        <div>
+          <label for="homeCity">City</label>
+          <input id="homeCity" type="text" />
+        </div>
+        <div>
+          <label for="homeStatus">Status</label>
+          <select id="homeStatus"><option value="">Any status</option><option value="Available">Available</option><option value="Rented">Rented</option></select>
+        </div>
+        <div>
+          <label for="homeBudget">Budget (Max)</label>
+          <input id="homeBudget" type="number" />
+        </div>
+        <div class="toolbar-action-wrap">
+          <button id="homeSearch" class="btn btn-primary" type="button">Search</button>
+        </div>
       </div>
     </section>
 

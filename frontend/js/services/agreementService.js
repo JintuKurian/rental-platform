@@ -17,9 +17,25 @@ export async function createAgreement(payload) {
     .single();
 }
 
+export async function updateAgreement(agreementId, payload) {
+  return supabaseClient
+    .from("rental_agreements")
+    .update(payload)
+    .eq("agreement_id", agreementId)
+    .select()
+    .single();
+}
+
 export async function updateAgreementStatus(agreementId, agreementStatus) {
   return supabaseClient
     .from("rental_agreements")
     .update({ agreement_status: agreementStatus })
+    .eq("agreement_id", agreementId);
+}
+
+export async function deleteAgreement(agreementId) {
+  return supabaseClient
+    .from("rental_agreements")
+    .delete()
     .eq("agreement_id", agreementId);
 }

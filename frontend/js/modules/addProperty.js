@@ -34,8 +34,10 @@ function renderSelectedImages() {
     : "";
 }
 
-imageInput.addEventListener("change", () => {
-  selectedImages = Array.from(imageInput.files || []);
+imageInput.addEventListener("change", (event) => {
+  const files = Array.from(event.target.files || []);
+  selectedImages = [...selectedImages, ...files];
+  imageInput.value = "";
   renderSelectedImages();
 });
 

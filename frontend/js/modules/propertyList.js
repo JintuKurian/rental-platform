@@ -9,7 +9,6 @@ if (!user) throw new Error("Unauthorized");
 const cityFilter = document.getElementById("cityFilter");
 const statusFilter = document.getElementById("statusFilter");
 const searchBtn = document.getElementById("searchBtn");
-const propertyTableBody = document.getElementById("propertyTableBody");
 const propertyCards = document.getElementById("propertyCards");
 
 const FALLBACK_IMG = "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80";
@@ -19,6 +18,10 @@ function statusClass(status) {
   if (value === "available") return "status-pill status-available";
   if (value === "rented") return "status-pill status-rented";
   return "status-pill status-inactive";
+}
+
+function canManage(property) {
+  return user.role === "admin" || (user.role === "owner" && property.owners?.user_id === user.user_id);
 }
 
 async function fetchProperties() {
@@ -42,12 +45,18 @@ async function fetchProperties() {
   }
 
   renderCards(data || []);
-  renderTable(data || []);
 }
 
 function renderCards(properties) {
   if (!properties.length) {
-    propertyCards.innerHTML = "<div class='empty-state'>No properties found. Try another city or status.</div>";
+    const addPropertyHref = user.role === "owner" ? "./add-property.html" : "../dashboards/owner.html";
+    propertyCards.innerHTML = `
+      <div class='empty-state card'>
+        <h3>No properties yet</h3>
+        <p>You haven't added any property listings.</p>
+        ${user.role === "owner" ? `<a class='btn btn-primary' href='${addPropertyHref}'>Add Property</a>` : ""}
+      </div>
+    `;
     return;
   }
 
@@ -55,18 +64,26 @@ function renderCards(properties) {
     const imageUrl = property.property_images?.[0]?.image_url || FALLBACK_IMG;
     const ownerName = property.owners?.users?.name || "Owner";
     const ownerEmail = property.owners?.users?.email || "N/A";
+    const manageActions = canManage(property)
+      ? `
+        <button class='btn btn-secondary editBtn' data-id='${property.property_id}'>Edit</button>
+        <button class='btn btn-danger deleteBtn' data-id='${property.property_id}'>Delete</button>
+      `
+      : "";
+
     return `
-      <article class="property-card">
+      <article class="property-card card">
         <img src="${imageUrl}" alt="${property.title || "Property"}" />
         <div class="property-body">
           <h4>${property.title || "Untitled listing"}</h4>
-          <p class="property-meta">${property.city || "-"}</p>
-          <p><strong>${formatCurrency(property.rent_amount)}</strong> / month</p>
-          <p><span class="${statusClass(property.status)}">${property.status || "Unknown"}</span></p>
-          <p class="property-meta">Owner contact: ${ownerName} (${ownerEmail})</p>
-          <div class="actions-row">
-            <a class="btn btn-secondary" href="./property-details.html?id=${property.property_id}">Details</a>
-            <a class="btn btn-primary" href="mailto:${ownerEmail}">Contact owner</a>
+          <p class="property-meta">City: ${property.city || "-"}</p>
+          <p><strong>Monthly Rent:</strong> ${formatCurrency(property.rent_amount)}</p>
+          <p><strong>Status:</strong> <span class="${statusClass(property.status)}">${property.status || "Unknown"}</span></p>
+          <p class="property-meta"><strong>Owner:</strong> ${ownerName}</p>
+          <div class="actions-row compact-actions">
+            <a class="btn btn-primary" href="./property-details.html?id=${property.property_id}">View</a>
+            ${manageActions}
+            ${ownerEmail !== "N/A" ? `<a class="btn btn-secondary" href="mailto:${ownerEmail}">Contact</a>` : ""}
           </div>
         </div>
       </article>
@@ -74,36 +91,8 @@ function renderCards(properties) {
   }).join("");
 }
 
-function renderTable(properties) {
-  if (!properties.length) {
-    propertyTableBody.innerHTML = "<tr><td colspan='7'>No properties found.</td></tr>";
-    return;
-  }
-
-  propertyTableBody.innerHTML = properties.map((property) => {
-    const ownerName = property.owners?.users?.name || "-";
-    const ownerEmail = property.owners?.users?.email || "";
-    const canManage = user.role === "admin" || (user.role === "owner" && property.owners?.user_id === user.user_id);
-
-    return `
-      <tr>
-        <td>${property.property_id}</td>
-        <td>${property.title || "-"}</td>
-        <td>${property.address || "-"}, ${property.city || "-"}</td>
-        <td>${formatCurrency(property.rent_amount)}</td>
-        <td><span class="${statusClass(property.status)}">${property.status || "-"}</span></td>
-        <td>${ownerEmail ? `${ownerName}<br/><a href='mailto:${ownerEmail}'>${ownerEmail}</a>` : ownerName}</td>
-        <td>
-          ${canManage ? `<button class='btn btn-secondary editBtn' data-id='${property.property_id}'>Edit rent</button>` : "-"}
-          ${canManage ? `<button class='btn btn-danger deleteBtn' data-id='${property.property_id}'>Delete</button>` : ""}
-        </td>
-      </tr>
-    `;
-  }).join("");
-}
-
 async function handleDelete(propertyId) {
-  if (!confirm(`Delete property #${propertyId}?`)) return;
+  if (!confirm("Are you sure you want to delete this property?")) return;
   const { error } = await deleteProperty(propertyId);
   if (error) {
     showToast("Delete failed", "error");
@@ -114,23 +103,35 @@ async function handleDelete(propertyId) {
 }
 
 async function handleEdit(propertyId) {
-  const newRent = prompt("Enter new monthly rent:");
+  const newTitle = prompt("Enter updated property title:");
+  if (!newTitle) return;
+  const newCity = prompt("Enter updated city:");
+  if (!newCity) return;
+  const newRent = prompt("Enter updated monthly rent:");
   if (!newRent) return;
-  const { error } = await updateProperty(propertyId, { rent_amount: Number(newRent) });
+
+  const { error } = await updateProperty(propertyId, {
+    title: newTitle.trim(),
+    city: newCity.trim(),
+    rent_amount: Number(newRent)
+  });
+
   if (error) {
     showToast("Update failed", "error");
     return;
   }
-  showToast("Rent updated", "success");
+  showToast("Property updated", "success");
   fetchProperties();
 }
 
 searchBtn.addEventListener("click", fetchProperties);
-propertyTableBody.addEventListener("click", async (event) => {
+propertyCards.addEventListener("click", async (event) => {
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
+
   const propertyId = Number(target.dataset.id);
   if (!propertyId) return;
+
   if (target.classList.contains("deleteBtn")) await handleDelete(propertyId);
   if (target.classList.contains("editBtn")) await handleEdit(propertyId);
 });
