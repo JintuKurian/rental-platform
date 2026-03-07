@@ -15,6 +15,14 @@ function statusClass(status) {
   return "status-pill status-inactive";
 }
 
+function roleClass(role) {
+  const value = (role || "").toLowerCase();
+  if (value === "admin") return "role-chip role-admin";
+  if (value === "owner") return "role-chip role-owner";
+  if (value === "tenant") return "role-chip role-tenant";
+  return "role-chip";
+}
+
 async function loadAdminSummary() {
   const [{ data: users }, { data: properties }] = await Promise.all([getAllUsers(), listProperties()]);
 
@@ -28,7 +36,7 @@ async function loadAdminSummary() {
 
   const userTableBody = document.getElementById("userTableBody");
   userTableBody.innerHTML = rowsUsers.length
-    ? rowsUsers.map((row) => `<tr><td>${row.user_id}</td><td>${row.name || "-"}</td><td>${row.email || "-"}</td><td><span class='role-chip'>${row.role || "-"}</span></td></tr>`).join("")
+    ? rowsUsers.map((row) => `<tr><td>${row.user_id}</td><td>${row.name || "-"}</td><td>${row.email || "-"}</td><td><span class='${roleClass(row.role)}'>${row.role || "-"}</span></td></tr>`).join("")
     : "<tr><td colspan='4'>No users found.</td></tr>";
 
   const propertyOverviewBody = document.getElementById("propertyOverviewBody");

@@ -15,10 +15,10 @@
 .dashboard-hero p { color: var(--text-secondary); }
 .dashboard-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.75rem; }
 .dashboard-actions .btn { width: 100%; }
-.data-table-card { background: #ffffff; border: 1px solid var(--line); border-radius: 14px; padding: 0.9rem; box-shadow: var(--shadow); }
+.data-table-card { background: #ffffff; border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem; box-shadow: var(--shadow); }
 
 .split-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1rem; }
-.callout { padding: 0.8rem; border-radius: 12px; background: #f8fafc; border: 1px solid #e5e7eb; color: var(--text); box-shadow: var(--shadow); }
+.callout { padding: 0.9rem; border-radius: 12px; background: #f8fafc; border: 1px solid var(--line); color: var(--text); box-shadow: var(--shadow); }
 
 .gallery-preview { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.5rem; margin-top: 0.7rem; }
 .gallery-preview img { width: 100%; border-radius: 10px; border: 1px solid var(--line); height: 88px; object-fit: cover; }
