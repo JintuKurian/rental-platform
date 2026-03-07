@@ -1,3 +1,5 @@
+import { enforceAmountInputValidation } from "../utils/helpers.js";
+
 function getCurrentUser() {
   const raw = localStorage.getItem("user");
   if (!raw) return null;
@@ -101,3 +103,4 @@ function renderUtilityBar() {
 }
 
 renderUtilityBar();
+enforceAmountInputValidation();
