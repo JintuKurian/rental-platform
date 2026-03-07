@@ -126,17 +126,23 @@ function getFieldValue(id) {
   return element ? element.value.trim() : "";
 }
 
+function updateCancelButtonVisibility(showCancel) {
+  cancelEditBtn.classList.toggle("is-invisible", !showCancel);
+  cancelEditBtn.setAttribute("aria-hidden", String(!showCancel));
+  cancelEditBtn.disabled = !showCancel;
+}
+
 function toggleEditMode(editing) {
   isEditMode = editing;
 
   if (user.role === "admin") {
     editProfileBtn.hidden = true;
-    cancelEditBtn.hidden = true;
+    updateCancelButtonVisibility(false);
     return;
   }
 
   editProfileBtn.textContent = isEditMode ? "Save Profile" : "Edit Profile";
-  cancelEditBtn.hidden = !isEditMode;
+  updateCancelButtonVisibility(isEditMode);
   renderSections();
 }
 
@@ -165,7 +171,9 @@ async function loadProfiles() {
 
   if (user.role === "admin") {
     editProfileBtn.hidden = true;
-    cancelEditBtn.hidden = true;
+    updateCancelButtonVisibility(false);
+  } else {
+    updateCancelButtonVisibility(false);
   }
 }
 

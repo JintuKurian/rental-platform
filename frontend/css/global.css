@@ -278,8 +278,22 @@ tbody tr:hover { background: #f8fafc; transition: background-color 0.2s ease; }
   flex-wrap: wrap;
 }
 
+
 .profile-actions {
   margin-top: 0;
+}
+
+.profile-actions .btn {
+  min-width: 126px;
+}
+
+.profile-edit-toggle {
+  min-width: 132px;
+}
+
+.is-invisible {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .profile-sections {
