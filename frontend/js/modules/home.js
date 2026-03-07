@@ -42,7 +42,7 @@ function renderLocationChips(properties) {
   const topCities = Object.entries(countByCity).sort((a, b) => b[1] - a[1]).slice(0, 8);
   popularLocations.innerHTML = topCities.length
     ? topCities.map(([city, count]) => `<span class="role-chip">${city} • ${count} homes</span>`).join("")
-    : "<div class='empty-state'><p class='empty-state-icon' aria-hidden='true'>📍</p><h4>No locations available</h4><p>Listings by city will appear here when inventory is available.</p><a class='btn btn-primary' href='./discover.html'>Refresh Results</a></div>";
+    : "<div class='empty-state'><p class='empty-state-icon' aria-hidden='true'>📍</p><h4>No locations available</h4><p>Listings by city will appear here when inventory is available.</p><button class='btn btn-primary' type='button' id='refreshPopularLocations'>Refresh Results</button></div>";
 }
 
 async function loadHomeListings() {
@@ -78,5 +78,5 @@ if (recommendedGrid || newHomesGrid || popularLocations) loadHomeListings();
 document.addEventListener("click", (event) => {
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
-  if (target.id === "retryDiscoverSearch" || target.id === "refreshNewHomes") loadHomeListings();
+  if (target.id === "retryDiscoverSearch" || target.id === "refreshNewHomes" || target.id === "refreshPopularLocations") loadHomeListings();
 });
