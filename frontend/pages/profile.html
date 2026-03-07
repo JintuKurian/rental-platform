@@ -18,14 +18,38 @@
       <h1 class="section-title">Your Profile</h1>
       <p class="section-subtitle">Account details for the currently logged-in user.</p>
       <div id="profileDetails" class="profile-grid"></div>
+
+      <form id="ownerProfileEditForm" class="form-grid" style="margin-top: 1rem;">
+        <div>
+          <label for="profilePhone">Phone</label>
+          <input id="profilePhone" type="text" placeholder="Phone number" disabled />
+        </div>
+        <div>
+          <label for="profileOwnerType">Owner Type</label>
+          <select id="profileOwnerType" disabled>
+            <option value="Local">Local</option>
+            <option value="NRI">NRI</option>
+          </select>
+        </div>
+        <div>
+          <label for="profileCity">City</label>
+          <input id="profileCity" type="text" placeholder="City" disabled />
+        </div>
+        <div class="full">
+          <label for="profileAddress">Address</label>
+          <input id="profileAddress" type="text" placeholder="Address" disabled />
+        </div>
+      </form>
+
       <div class="actions-row">
+        <button id="editProfileBtn" class="btn btn-primary" type="button">Edit Profile</button>
         <button id="logoutBtn" class="btn btn-danger" type="button">Logout</button>
       </div>
     </section>
   </main>
 
   <script type="module" src="../js/modules/profile.js"></script>
-  
+
 <script type="module" src="../js/modules/appShell.js"></script>
 </body>
 </html>

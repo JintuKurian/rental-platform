@@ -1,5 +1,5 @@
 import { requireUser } from "../core/auth.js";
-import { renderFlashMessage, showToast, formatCurrency } from "../utils/helpers.js";
+import { renderFlashMessage, showToast, formatCurrency, displaySuccessMessage } from "../utils/helpers.js";
 import { validatePropertyPayload } from "../utils/validators.js";
 import { getOwnerByUserId, saveOwnerProfile } from "../services/userService.js";
 import { createProperty, getPropertiesByOwner, uploadPropertyImage } from "../services/propertyService.js";
@@ -10,6 +10,7 @@ if (!user) throw new Error("Unauthorized");
 renderFlashMessage("dashboard");
 
 const ownerProfileForm = document.getElementById("ownerProfileForm");
+const ownerProfileSection = document.getElementById("ownerProfileSection");
 const ownerProfileStatus = document.getElementById("ownerProfileStatus");
 const ownerQuickPropertyForm = document.getElementById("ownerQuickPropertyForm");
 const ownerQuickImageInput = document.getElementById("quickPropertyImages");
@@ -19,6 +20,10 @@ let selectedQuickImages = [];
 
 function setProfileStatus(isComplete) {
   ownerProfileStatus.textContent = isComplete ? "Complete" : "Incomplete";
+
+  if (ownerProfileSection) {
+    ownerProfileSection.style.display = isComplete ? "none" : "grid";
+  }
 }
 
 function isOwnerProfileComplete(profile) {
@@ -122,7 +127,7 @@ ownerProfileForm.addEventListener("submit", async (event) => {
   }
 
   setProfileStatus(isOwnerProfileComplete(data));
-  showToast("Owner profile updated", "success");
+  displaySuccessMessage("Profile saved successfully");
   loadOwnerSummary();
 });
 
