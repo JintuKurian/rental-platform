@@ -36,27 +36,28 @@ export async function getAllUsers() {
 }
 
 export async function saveOwnerProfile(userId, payload) {
-  const response = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("owners")
-    .update({
+    .upsert({
+      user_id: userId,
       phone: payload.phone,
-      aadhaar_no: payload.aadhaar_no,
       owner_type: payload.owner_type,
       city: payload.city,
       address: payload.address
-    })
-    .eq("user_id", userId)
-    .select("owner_id,user_id,phone,address,city,owner_type")
-    .single();
+    }, { onConflict: "user_id" })
+    .select("owner_id,user_id,phone,address,city,owner_type");
 
-  if (response.error) {
+  if (error) {
     return {
       data: null,
       error: new Error("We couldn't save your owner profile right now. Please check your details and try again.")
     };
   }
 
-  return response;
+  return {
+    data: data?.[0] || null,
+    error: null
+  };
 }
 
 export async function saveTenantProfile(userId, payload) {
