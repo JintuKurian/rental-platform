@@ -68,13 +68,14 @@ function renderUtilityBar() {
   const role = user?.role;
   const prefix = getBasePrefix();
   const links = getNavByRole(role).map((link) => buildLink(prefix, link)).join("");
+  const initials = user?.name ? user.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() : "U";
 
   utility.innerHTML = `
     <div class="app-nav shell-panel">
       <a class="app-brand" href="${prefix}index.html">🏠 Rental Platform</a>
       <nav class="app-links">${links}</nav>
       <div class="app-user-actions">
-        ${user ? `<a class="btn btn-secondary" href="${prefix}pages/profile.html">MyProfile</a>` : `<a class="btn btn-secondary" href="${prefix}pages/login.html">Login</a><a class="btn btn-primary" href="${prefix}pages/register.html">Sign up</a>`}
+        ${user ? `<a class="app-profile-link" href="${prefix}pages/profile.html"><span class="app-avatar" aria-hidden="true">${initials}</span><span>Profile</span></a>` : `<a class="btn btn-secondary" href="${prefix}pages/login.html">Login</a><a class="btn btn-primary" href="${prefix}pages/register.html">Sign up</a>`}
       </div>
     </div>
   `;
