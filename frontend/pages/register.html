@@ -8,19 +8,46 @@
   <link rel="stylesheet" href="../css/forms.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="app-body">
-<header class="auth-topbar"><a href="../index.html" class="app-brand">🏠 Rental Platform</a><nav><a href="../index.html">Home</a><a href="./about.html">About</a><a href="./discover.html">Discover</a></nav></header>
+<body class="app-body auth-page">
+<header class="auth-topbar">
+  <a href="../index.html" class="app-brand">🏠 Rental Platform</a>
+  <nav>
+    <a href="../index.html">Home</a>
+    <a href="./about.html">About</a>
+    <a href="./discover.html">Discover</a>
+  </nav>
+</header>
 <main class="auth-shell">
   <section class="auth-showcase">
-    <div>
-      <h2>Start your Rental Platform journey</h2>
-      <p>Create your account in seconds. You can complete your full profile after login in your dashboard.</p>
+    <div class="auth-showcase-intro">
+      <p class="auth-kicker">All-in-one rental operations</p>
+      <h1>Grow your rental business with a clear, modern workflow.</h1>
+      <p class="auth-lead">Create your account and start managing listings, tenant journeys, and agreements in one reliable workspace.</p>
     </div>
-    <ul>
-      <li>Owners: add listings, upload photos, and manage tenant pipeline.</li>
-      <li>Tenants: browse recommendations, save favorites, and track agreements.</li>
-      <li>Secure role-based dashboard and modern rental workflows.</li>
-    </ul>
+
+    <div class="auth-features" aria-label="Platform highlights">
+      <article class="feature-item">
+        <span class="feature-icon" aria-hidden="true">🏘️</span>
+        <div>
+          <h3>Manage properties with confidence</h3>
+          <p>Property owners can list, update, and track rental performance in one dashboard.</p>
+        </div>
+      </article>
+      <article class="feature-item">
+        <span class="feature-icon" aria-hidden="true">🔎</span>
+        <div>
+          <h3>Help tenants find the right home</h3>
+          <p>Tenants can discover available homes, compare options, and move forward faster.</p>
+        </div>
+      </article>
+      <article class="feature-item">
+        <span class="feature-icon" aria-hidden="true">🔐</span>
+        <div>
+          <h3>Keep agreements and payments secure</h3>
+          <p>Centralized agreements and payment visibility make every step transparent.</p>
+        </div>
+      </article>
+    </div>
   </section>
 
   <section class="auth-card">

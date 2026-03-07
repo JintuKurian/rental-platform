@@ -8,23 +8,53 @@
   <link rel="stylesheet" href="../css/forms.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="app-body">
-<header class="auth-topbar"><a href="../index.html" class="app-brand">🏠 Rental Platform</a><nav><a href="../index.html">Home</a><a href="./about.html">About</a><a href="./discover.html">Discover</a></nav></header>
+<body class="app-body auth-page">
+<header class="auth-topbar">
+  <a href="../index.html" class="app-brand">🏠 Rental Platform</a>
+  <nav>
+    <a href="../index.html">Home</a>
+    <a href="./about.html">About</a>
+    <a href="./discover.html">Discover</a>
+  </nav>
+</header>
 <main class="auth-shell">
   <section class="auth-showcase">
-    <div>
-      <h2>Welcome back 👋</h2>
-      <p>Login to continue from where you left off.</p>
+    <div class="auth-showcase-intro">
+      <p class="auth-kicker">All-in-one rental operations</p>
+      <h1>Run listings, tenants, and agreements from one platform.</h1>
+      <p class="auth-lead">Rental Platform helps property teams and renters stay in sync with a simple workflow for discovery, onboarding, and payment tracking.</p>
     </div>
-    <ul>
-      <li>Owners: monitor listings, occupancy, and income summary.</li>
-      <li>Tenants: discover recommended homes near you.</li>
-      <li>Admins: oversee users, properties, and agreements.</li>
-    </ul>
+
+    <div class="auth-features" aria-label="Platform highlights">
+      <article class="feature-item">
+        <span class="feature-icon" aria-hidden="true">🏘️</span>
+        <div>
+          <h3>Manage properties with confidence</h3>
+          <p>Property owners can list, update, and track rental performance in one dashboard.</p>
+        </div>
+      </article>
+      <article class="feature-item">
+        <span class="feature-icon" aria-hidden="true">🔎</span>
+        <div>
+          <h3>Help tenants find the right home</h3>
+          <p>Tenants can discover available homes, compare options, and move forward faster.</p>
+        </div>
+      </article>
+      <article class="feature-item">
+        <span class="feature-icon" aria-hidden="true">🔐</span>
+        <div>
+          <h3>Keep agreements and payments secure</h3>
+          <p>Centralized agreements and payment visibility make every step transparent.</p>
+        </div>
+      </article>
+    </div>
   </section>
 
   <section class="auth-card">
-    <div class="auth-brand"><h2>Log in</h2><p>Access your personalized dashboard.</p></div>
+    <div class="auth-brand">
+      <h2>Log in</h2>
+      <p>Access your personalized dashboard.</p>
+    </div>
     <form id="loginForm" class="auth-form">
       <div><label for="email">Email</label><input type="email" id="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" required /></div>
       <div><label for="password">Password</label><input type="password" id="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required /></div>
