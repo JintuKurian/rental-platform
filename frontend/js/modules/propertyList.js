@@ -1,5 +1,5 @@
 import { requireUser } from "../core/auth.js";
-import { listProperties, getPropertiesByOwnerUserId, deleteProperty, updateProperty } from "../services/propertyService.js";
+import { listProperties, getPropertiesByOwnerUserId, deleteProperty, updateProperty, PROPERTY_IMAGE_PLACEHOLDER } from "../services/propertyService.js";
 import { formatCurrency, showToast } from "../utils/helpers.js";
 
 const user = requireUser(["admin", "owner", "tenant"]);
@@ -11,11 +11,8 @@ const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
 const propertyCards = document.getElementById("propertyCards");
 
-const FALLBACK_IMG = "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80";
-
 function getPropertyThumbnail(property) {
-  const firstImage = property.property_images?.find((image) => image?.image_url);
-  return firstImage?.image_url || FALLBACK_IMG;
+  return property.property_images?.[0]?.image_url || PROPERTY_IMAGE_PLACEHOLDER;
 }
 
 function statusClass(status) {

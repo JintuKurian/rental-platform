@@ -1,6 +1,7 @@
+import supabaseClient from "../core/supabaseClient.js";
 import { enforceAmountInputValidation } from "../utils/helpers.js";
 
-function getCurrentUser() {
+function getStoredUser() {
   const raw = localStorage.getItem("user");
   if (!raw) return null;
   try {
@@ -16,7 +17,7 @@ function getBasePrefix() {
   return "./";
 }
 
-function getNavByRole(role) {
+function getDashboardLinks(role) {
   if (role === "owner") {
     return [
       ["Dashboard", "dashboards/owner.html"],
@@ -48,6 +49,10 @@ function getNavByRole(role) {
     ];
   }
 
+  return [];
+}
+
+function getPublicLinks() {
   return [
     ["Home", "index.html"],
     ["About", "pages/about.html"],
@@ -69,14 +74,27 @@ function buildLink(prefix, [label, href]) {
   return `<a class="${active ? "active" : ""}" href="${fullHref}">${label}</a>`;
 }
 
-function renderUtilityBar() {
+async function renderUtilityBar() {
   const utility = document.querySelector(".utility-bar");
   if (!utility) return;
 
-  const user = getCurrentUser();
+  const {
+    data: { session }
+  } = await supabaseClient.auth.getSession();
+
+  const storedUser = getStoredUser();
+  const user = session && storedUser ? storedUser : null;
+
+  if (!session && storedUser) {
+    localStorage.removeItem("user");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("role");
+    localStorage.removeItem("name");
+  }
+
   const role = user?.role;
   const prefix = getBasePrefix();
-  const links = getNavByRole(role).map((link) => buildLink(prefix, link)).join("");
+  const links = [...getPublicLinks(), ...getDashboardLinks(role)].map((link) => buildLink(prefix, link)).join("");
   const initials = user?.name ? user.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() : "U";
   const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Guest";
 
@@ -125,5 +143,5 @@ function renderUtilityBar() {
   }
 }
 
-renderUtilityBar();
+void renderUtilityBar();
 enforceAmountInputValidation();

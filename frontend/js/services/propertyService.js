@@ -5,6 +5,8 @@ const PROPERTY_IMAGE_BUCKET = "property-images";
 const RESIDENTIAL_PROPERTY_TYPES = new Set(["apartment", "house", "studio"]);
 const COMMERCIAL_PROPERTY_TYPES = new Set(["office", "shop", "commercial"]);
 
+export const PROPERTY_IMAGE_PLACEHOLDER = "https://images.unsplash.com/photo-1560184897-ae75f418493e";
+
 export function deriveAllowedUsage({ property_type, bedrooms = 0, bathrooms = 0, office_rooms = 0, shop_units = 0 } = {}) {
   const type = (property_type || "").trim().toLowerCase();
   const residentialCount = Number(bedrooms || 0) + Number(bathrooms || 0);
