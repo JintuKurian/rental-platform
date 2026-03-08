@@ -83,13 +83,16 @@ function renderUtilityBar() {
   utility.innerHTML = `
     <div class="app-nav shell-panel navbar-container">
       <a class="app-brand" href="${prefix}index.html">🏠 Rental Platform</a>
-      <nav class="app-links">${links}</nav>
-      <div class="app-user-actions">
-        ${
-          user
-            ? `<button type="button" id="profileNavBtn" class="app-profile-link profile-btn"><span class="app-avatar" aria-hidden="true">${initials}</span><span class="app-profile-meta"><span>Profile</span><span class="role-badge ${getRoleBadgeClass(role)}">${roleLabel}</span></span></button>`
-            : `<a class="btn btn-secondary" href="${prefix}pages/login.html">Login</a><a class="btn btn-primary" href="${prefix}pages/register.html">Sign up</a>`
-        }
+      <button type="button" class="app-nav-toggle" aria-expanded="false" aria-label="Toggle navigation menu">☰</button>
+      <div class="app-nav-menu">
+        <nav class="app-links">${links}</nav>
+        <div class="app-user-actions">
+          ${
+            user
+              ? `<button type="button" id="profileNavBtn" class="app-profile-link profile-btn"><span class="app-avatar" aria-hidden="true">${initials}</span><span class="app-profile-meta"><span>Profile</span><span class="role-badge ${getRoleBadgeClass(role)}">${roleLabel}</span></span></button>`
+              : `<a class="btn btn-secondary" href="${prefix}pages/login.html">Login</a><a class="btn btn-primary" href="${prefix}pages/register.html">Sign up</a>`
+          }
+        </div>
       </div>
     </div>
   `;
@@ -98,6 +101,26 @@ function renderUtilityBar() {
   if (profileButton) {
     profileButton.addEventListener("click", () => {
       window.location.href = `${prefix}pages/profile.html`;
+    });
+  }
+
+  const navToggle = utility.querySelector(".app-nav-toggle");
+  const navMenu = utility.querySelector(".app-nav-menu");
+
+  if (navToggle && navMenu) {
+    navToggle.addEventListener("click", () => {
+      const isOpen = navMenu.classList.toggle("is-open");
+      navToggle.setAttribute("aria-expanded", String(isOpen));
+      navToggle.textContent = isOpen ? "✕" : "☰";
+    });
+
+    navMenu.querySelectorAll("a, button").forEach((item) => {
+      item.addEventListener("click", () => {
+        if (window.innerWidth > 768) return;
+        navMenu.classList.remove("is-open");
+        navToggle.setAttribute("aria-expanded", "false");
+        navToggle.textContent = "☰";
+      });
     });
   }
 }

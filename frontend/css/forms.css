@@ -270,17 +270,46 @@ body.app-body.landing-page {
 .site-footer { margin: 0 auto 1.4rem; padding: 0.9rem 1rem; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; border: 1px solid var(--line); background: #ffffff; box-shadow: var(--shadow); }
 .site-footer p { color: var(--text-secondary); }
 
-@media (max-width: 980px) {
+@media (max-width: 1200px) {
+  .landing-hero {
+    width: min(100% - 2rem, 1200px);
+  }
+}
+
+@media (max-width: 992px) {
   .auth-shell { grid-template-columns: 1fr; min-height: auto; }
   .auth-card { justify-self: center; max-width: 100%; }
   .auth-showcase { min-height: 240px; }
+  .landing-grid { grid-template-columns: 1fr; }
+  .search-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .discover-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .auth-shell { gap: 0.8rem; margin-top: 0.75rem; margin-bottom: 1rem; }
-  .form-grid, .search-bar, .landing-grid, .discover-filter-grid { grid-template-columns: 1fr; }
+  .form-grid, .search-bar, .discover-filter-grid { grid-template-columns: 1fr; }
   .toolbar > * { flex-basis: 100%; }
   .landing-nav { flex-wrap: wrap; }
+  .landing-links { width: 100%; justify-content: flex-start; }
   .nav-actions { width: 100%; margin-left: 0; }
+  .nav-actions .btn { flex: 1 1 100%; }
   .site-footer { flex-direction: column; align-items: flex-start; }
+  .hero-copy .btn-primary { min-width: 0; width: 100%; }
+}
+
+@media (max-width: 576px) {
+  .landing-hero {
+    width: min(100% - 1rem, 100%);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .discover-filter-action .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .site-footer {
+    padding: 0.75rem;
+  }
 }
