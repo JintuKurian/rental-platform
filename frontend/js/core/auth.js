@@ -30,6 +30,22 @@ function clearStoredUser() {
   localStorage.removeItem("name");
 }
 
+function persistUser(user) {
+  localStorage.setItem("user", JSON.stringify(user));
+  localStorage.setItem("userId", user.user_id);
+  localStorage.setItem("role", user.role);
+  localStorage.setItem("name", user.name);
+}
+
+async function fetchAppUserById(userId) {
+  return supabaseClient
+    .from("users")
+    .select("user_id,name,email,role")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+}
+
 export function getCurrentUser() {
   const user = getStoredUser();
 
@@ -42,8 +58,6 @@ export function getCurrentUser() {
 }
 
 export async function requireUser(allowedRoles = []) {
-  const user = getStoredUser();
-
   const {
     data: { session }
   } = await supabaseClient.auth.getSession();
@@ -54,6 +68,20 @@ export async function requireUser(allowedRoles = []) {
     clearStoredUser();
     window.location.href = "../pages/login.html";
     return null;
+  }
+
+  const authUserId = session.user?.id;
+  const storedUser = getStoredUser();
+  const activeUser = storedUser?.user_id === authUserId ? storedUser : null;
+
+  let user = activeUser;
+
+  if (!user && authUserId) {
+    const { data: appUser } = await fetchAppUserById(authUserId);
+    if (appUser) {
+      user = appUser;
+      persistUser(appUser);
+    }
   }
 
   if (!user) {

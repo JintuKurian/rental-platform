@@ -29,11 +29,11 @@ function redirectToDashboard(role) {
   else window.location.href = "../dashboards/tenant.html";
 }
 
-async function getAppUserByEmail(email) {
+async function getAppUserById(userId) {
   return supabaseClient
     .from("users")
     .select("user_id, name, email, role")
-    .eq("email", email)
+    .eq("user_id", userId)
     .limit(1)
     .maybeSingle();
 }
@@ -45,10 +45,10 @@ async function handleExistingSession() {
 
   if (!session) return;
 
-  const email = session.user?.email?.toLowerCase();
-  if (!email) return;
+  const authUserId = session.user?.id;
+  if (!authUserId) return;
 
-  const { data: user } = await getAppUserByEmail(email);
+  const { data: user } = await getAppUserById(authUserId);
   if (!user) return;
 
   persistUser(user);
@@ -84,8 +84,16 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  const loginEmail = data?.user?.email?.toLowerCase() || email;
-  const { data: appUser, error: userError } = await getAppUserByEmail(loginEmail);
+  const authUserId = data?.user?.id;
+  if (!authUserId) {
+    await supabaseClient.auth.signOut();
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Login";
+    showToast("Unable to load account profile", "error");
+    return;
+  }
+
+  const { data: appUser, error: userError } = await getAppUserById(authUserId);
 
   if (userError || !appUser) {
     await supabaseClient.auth.signOut();

@@ -42,18 +42,37 @@ form.addEventListener("submit", async (event) => {
   submitBtn.disabled = true;
   submitBtn.textContent = "Registering...";
 
-  let result = await createUser({ name, email, password, role });
-  if (result.error && navigator.onLine) {
-    result = await createUser({ name, email, password, role });
-  }
+  const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+    email,
+    password
+  });
 
-  const { error } = result;
-
-  if (error) {
-    console.error("Registration failed", error);
+  if (authError) {
     submitBtn.disabled = false;
     submitBtn.textContent = "Register";
-    showToast(getFriendlyRegisterError(error), "error");
+    showToast(getFriendlyRegisterError(authError), "error");
+    return;
+  }
+
+  const authUserId = authData?.user?.id;
+  if (!authUserId) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Register";
+    showToast("Unable to create your account. Please try again.", "error");
+    return;
+  }
+
+  let result = await createUser({ user_id: authUserId, name, email, role });
+  if (result.error && navigator.onLine) {
+    result = await createUser({ user_id: authUserId, name, email, role });
+  }
+
+  if (result.error) {
+    console.error("Registration failed", result.error);
+    await supabaseClient.auth.signOut();
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Register";
+    showToast(getFriendlyRegisterError(result.error), "error");
     return;
   }
 

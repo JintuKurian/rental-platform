@@ -6,7 +6,6 @@ create table if not exists users (
   user_id bigint generated always as identity primary key,
   name text not null,
   email text not null unique,
-  password_hash text,
   role text not null check (role in ('admin', 'owner', 'tenant')),
   created_at timestamptz not null default now()
 );
