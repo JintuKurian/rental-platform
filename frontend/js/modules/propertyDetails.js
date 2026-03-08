@@ -1,14 +1,11 @@
-import { listProperties } from "../services/propertyService.js";
+import { listProperties, PROPERTY_IMAGE_PLACEHOLDER } from "../services/propertyService.js";
 import { formatCurrency } from "../utils/helpers.js";
 
 const details = document.getElementById("propertyDetails");
 const propertyId = Number(new URLSearchParams(window.location.search).get("id"));
 
-const FALLBACK_IMG = "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=900&q=80";
-
 function getPropertyThumbnail(property) {
-  const firstImage = property.property_images?.find((image) => image?.image_url);
-  return firstImage?.image_url || FALLBACK_IMG;
+  return property.property_images?.[0]?.image_url || PROPERTY_IMAGE_PLACEHOLDER;
 }
 
 
@@ -27,7 +24,7 @@ async function loadProperty() {
 
   const gallery = property.property_images?.length
     ? property.property_images.map((img) => `<img src='${img.image_url}' alt='property image' />`).join("")
-    : `<img src="${FALLBACK_IMG}" alt="property image" />`;
+    : `<img src="${PROPERTY_IMAGE_PLACEHOLDER}" alt="property image" />`;
 
   const recentlyViewed = JSON.parse(localStorage.getItem("recentlyViewed") || "[]");
   if (!recentlyViewed.includes(property.property_id)) {
