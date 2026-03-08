@@ -1,4 +1,5 @@
 import supabaseClient from "../core/supabaseClient.js";
+import { storeUserSession } from "../core/auth.js";
 import { renderFlashMessage, showToast } from "../utils/helpers.js";
 
 const form = document.getElementById("loginForm");
@@ -35,11 +36,8 @@ if (form) {
       return;
     }
 
-    localStorage.setItem("user", JSON.stringify(authData.user));
-    localStorage.setItem("appUser", JSON.stringify(appUser));
-    localStorage.setItem("userId", String(appUser.user_id));
-    localStorage.setItem("role", appUser.role);
-    localStorage.setItem("userEmail", appUser.email);
+    localStorage.setItem("loggedInUser", email);
+    storeUserSession(authData.user, appUser);
 
     const nextPage = getDashboardPath(appUser.role);
     if (!nextPage) {

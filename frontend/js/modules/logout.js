@@ -11,8 +11,11 @@ function logoutUser() {
   // Set flash message for login page
   setFlashMessage("Logout successful", "success", "auth");
 
-  // Redirect to login
-  window.location.href = "../pages/login.html";
+  localStorage.removeItem("loggedInUser");
+  localStorage.removeItem("userEmail");
+
+  // Redirect to home
+  window.location.href = "/index.html";
 }
 
 const logoutBtn = document.getElementById("logoutBtn");

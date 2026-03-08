@@ -34,6 +34,7 @@ export function storeUserSession(authUser, appUser = null) {
   }
 
   if (appUser) {
+    localStorage.setItem("loggedInUser", appUser.email || "");
     localStorage.setItem("appUser", JSON.stringify(appUser));
     localStorage.setItem("userId", String(appUser.user_id));
     localStorage.setItem("role", appUser.role || "");
@@ -43,6 +44,7 @@ export function storeUserSession(authUser, appUser = null) {
 }
 
 export function clearStoredUser() {
+  localStorage.removeItem("loggedInUser");
   localStorage.removeItem("user");
   localStorage.removeItem("appUser");
   localStorage.removeItem("userId");
@@ -52,7 +54,7 @@ export function clearStoredUser() {
 }
 
 export async function syncStoredUserWithSession() {
-  const email = localStorage.getItem("userEmail");
+  const email = localStorage.getItem("loggedInUser") || localStorage.getItem("userEmail");
   if (!email) {
     clearStoredUser();
     return null;

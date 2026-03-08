@@ -40,7 +40,7 @@ function toggleEditMode(enabled) {
 }
 
 async function loadProfile() {
-  const email = localStorage.getItem("userEmail");
+  const email = localStorage.getItem("loggedInUser") || localStorage.getItem("userEmail");
   if (!email) {
     window.location.href = "/pages/login.html";
     return;
@@ -173,6 +173,7 @@ if (profileForm) {
 
 if (logoutBtn) {
   logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("loggedInUser");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("user");
     localStorage.removeItem("appUser");
