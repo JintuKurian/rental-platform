@@ -26,15 +26,16 @@ const PROPERTY_SELECT_QUERY = `
   property_images(image_url)
 `;
 
-export async function listProperties({ city = "", status = "", search = "" } = {}) {
+export async function listProperties({ city = "", status = "", search = "", maxBudget = 0 } = {}) {
   let query = supabaseClient
     .from("properties")
     .select(PROPERTY_SELECT_QUERY)
-    .order("property_id", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (city) query = query.ilike("city", `%${city}%`);
   if (status) query = query.eq("status", status);
   if (search) query = query.or(`title.ilike.%${search}%,city.ilike.%${search}%,property_type.ilike.%${search}%`);
+  if (maxBudget) query = query.lte("rent_amount", maxBudget);
 
   return query;
 }
@@ -76,10 +77,23 @@ export async function getPropertiesByOwner(ownerId) {
 }
 
 export async function createProperty(payload, imageFiles = []) {
-  const currentUserId = Number(localStorage.getItem("userId"));
-  if (!Number.isFinite(currentUserId) || currentUserId <= 0) {
-    return { data: null, error: new Error("Invalid user ID") };
+  // Get authenticated user id from auth session (not localStorage which can be stale)
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const authUid = sessionData?.session?.user?.id;
+  if (!authUid) return { data: null, error: new Error("Not authenticated") };
+
+  // Look up public.users row to get user_id integer
+  const { data: publicUser, error: publicUserError } = await supabaseClient
+    .from("users")
+    .select("user_id")
+    .eq("auth_user_id", authUid)
+    .maybeSingle();
+
+  if (publicUserError || !publicUser?.user_id) {
+    return { data: null, error: publicUserError || new Error("User not found") };
   }
+
+  const currentUserId = publicUser.user_id;
 
   const { data: existingOwner, error: ownerLookupError } = await supabaseClient
     .from("owners")

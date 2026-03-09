@@ -23,25 +23,16 @@ function statusClass(status) {
 }
 
 function getRelevantDetails(property) {
-  const type = (property.property_type || "").toLowerCase();
+  const type  = (property.property_type || "").toLowerCase();
+  const parts = [];
 
-  if (type === "apartment" || type === "house") {
-    return `Bedrooms: ${property.bedrooms || 0} · Bathrooms: ${property.bathrooms || 0} · Area: ${property.area_sqft || 0} sqft`;
-  }
+  if (property.bedrooms    != null) parts.push(`🛏 ${property.bedrooms} Bed`);
+  if (property.bathrooms   != null) parts.push(`🚿 ${property.bathrooms} Bath`);
+  if (property.office_rooms != null && type === "office") parts.push(`🏢 ${property.office_rooms} Rooms`);
+  if (property.shop_units  != null && ["shop","commercial"].includes(type)) parts.push(`🏪 ${property.shop_units} Units`);
+  if (property.area_sqft)  parts.push(`📐 ${property.area_sqft} sqft`);
 
-  if (type === "studio") {
-    return `Bathrooms: ${property.bathrooms || 0} · Area: ${property.area_sqft || 0} sqft`;
-  }
-
-  if (type === "office") {
-    return `Office Rooms: ${property.office_rooms || 0} · Area: ${property.area_sqft || 0} sqft`;
-  }
-
-  if (type === "shop" || type === "commercial") {
-    return `Shop Units: ${property.shop_units || 0} · Area: ${property.area_sqft || 0} sqft`;
-  }
-
-  return `Area: ${property.area_sqft || 0} sqft`;
+  return parts.length ? parts.join(" &nbsp;·&nbsp; ") : "—";
 }
 
 
@@ -59,6 +50,7 @@ async function fetchProperties() {
   const searchVal = searchInput?.value.trim() || "";
   const cityVal   = cityFilter?.value.trim()   || "";
   const statusVal = statusFilter?.value.trim()  || "";
+  const maxBudget = Number(document.getElementById("budgetFilter")?.value || 0);
 
   let data, error;
 
@@ -69,18 +61,18 @@ async function fetchProperties() {
       search: searchVal
     }));
   } else if (user.role === "tenant") {
-    // Tenants always see only Available; search/city still work
     ({ data, error } = await listProperties({
-      city:   cityVal,
-      status: "Available",
-      search: searchVal
+      city:      cityVal,
+      status:    "Available",
+      search:    searchVal,
+      maxBudget
     }));
   } else {
-    // Admin — all filters active
     ({ data, error } = await listProperties({
-      city:   cityVal,
-      status: statusVal,
-      search: searchVal
+      city:      cityVal,
+      status:    statusVal,
+      search:    searchVal,
+      maxBudget
     }));
   }
 
@@ -107,13 +99,15 @@ function renderCards(properties) {
   }
 
   propertyCards.innerHTML = properties.map((property) => {
-    const imageUrl = getPropertyThumbnail(property);
-    const ownerName = property.owners?.users?.name || "Owner";
+    const imageUrl   = getPropertyThumbnail(property);
+    const ownerName  = property.owners?.users?.name || "Owner";
+    const typeLabel  = property.property_type || "";
+    const specs      = getRelevantDetails(property);
 
     const ownerActions = `
       <a class="btn btn-primary" href="./property-details.html?id=${property.property_id}">View</a>
-      ${canEdit(property) ? `<button class='btn btn-secondary editBtn' data-id='${property.property_id}'>Edit</button>` : ""}
-      ${canDelete(property) ? `<button class='btn btn-danger deleteBtn' data-id='${property.property_id}'>Delete</button>` : ""}
+      ${canEdit(property)   ? `<button class='btn btn-secondary editBtn'   data-id='${property.property_id}'>Edit</button>`   : ""}
+      ${canDelete(property) ? `<button class='btn btn-danger    deleteBtn' data-id='${property.property_id}'>Delete</button>` : ""}
     `;
 
     const tenantActions = `
@@ -123,14 +117,19 @@ function renderCards(properties) {
 
     return `
       <article class="property-card card">
-        <img class="property-img" src="${imageUrl}" alt="${property.title || "Property"}" onerror="this.src='${PROPERTY_IMAGE_PLACEHOLDER}'" />
+        <div class="property-img-wrap">
+          <img class="property-img" src="${imageUrl}"
+               alt="${property.title || "Property"}"
+               onerror="this.src='${PROPERTY_IMAGE_PLACEHOLDER}'" />
+          ${typeLabel ? `<span class="property-type-badge">${typeLabel}</span>` : ""}
+        </div>
         <div class="property-body">
-          <h4>${property.title || "Untitled listing"}</h4>
+          <h4 class="property-title">${property.title || "Untitled listing"}</h4>
           <p class="property-meta">📍 ${property.city || "—"}</p>
-          <p><strong>Monthly Rent:</strong> ${formatCurrency(property.rent_amount)}</p>
-          <p><strong>Status:</strong> <span class="${statusClass(property.status)}">${property.status || "Unknown"}</span></p>
+          <p class="property-meta property-specs">${specs}</p>
+          <p class="property-rent"><strong>${formatCurrency(property.rent_amount)}</strong> <span>/ month</span></p>
+          <p class="property-meta"><strong>Status:</strong> <span class="${statusClass(property.status)}">${property.status || "Unknown"}</span></p>
           <p class="property-meta"><strong>Owner:</strong> ${ownerName}</p>
-          <p class="property-meta"><strong>Details:</strong> ${getRelevantDetails(property)}</p>
           <div class="actions-row compact-actions">
             ${user.role === "tenant" ? tenantActions : ownerActions}
           </div>

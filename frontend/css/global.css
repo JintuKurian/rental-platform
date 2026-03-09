@@ -622,6 +622,71 @@ tbody tr:last-child td { border-bottom: 0; }
 .property-body { padding: 1rem; display: grid; gap: 0.45rem; }
 .property-meta { color: var(--text-secondary); font-size: 0.875rem; }
 
+/* ── Property card image wrap + type badge ── */
+.property-img-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.property-type-badge {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+.property-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+.property-specs {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+}
+.property-rent {
+  font-size: 1.05rem;
+  color: var(--primary);
+  margin: 0.1rem 0;
+}
+.property-rent span { font-size: 0.8rem; color: var(--text-secondary); font-weight: 400; }
+
+/* ── Location chip (clickable city button) ── */
+.location-chip {
+  cursor: pointer;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+.location-chip:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+.chip-count {
+  background: var(--primary);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+  font-size: 0.72rem;
+}
+
+
 /* ─────────────────────────────────────────
    Image Gallery Preview (Add Property)
 ───────────────────────────────────────── */
