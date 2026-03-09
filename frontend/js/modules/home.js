@@ -150,4 +150,18 @@ document.addEventListener("click", (e) => {
 });
 
 // ── Init ─────────────────────────────────────────────────────
+// Read URL query params — set by the home page hero search form.
+// e.g. discover.html?city=Bangalore&status=Available&budget=20000
+(function applyUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const city   = params.get("city")   || "";
+  const status = params.get("status") || "";
+  const budget = params.get("budget") || "";
+
+  if (city)   { const el = document.getElementById("homeCity");   if (el) el.value = city; }
+  if (status) { const el = document.getElementById("homeStatus"); if (el) el.value = status; }
+  if (budget) { const el = document.getElementById("homeBudget"); if (el) el.value = budget; }
+})();
+
 loadHomeListings();
+

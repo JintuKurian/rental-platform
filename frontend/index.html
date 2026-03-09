@@ -1,42 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Rental Platform</title>
+  <title>NestFinder — Find Your Perfect Rental</title>
+  <meta name="description" content="Search verified rental properties by city, type and budget. Apartments, houses, studios, offices and shops." />
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="./css/global.css" />
   <link rel="stylesheet" href="./css/forms.css" />
-  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-  <link rel="manifest" href="/assets/icons/site.webmanifest">
-  <link rel="preload" href="/assets/css/style.css" as="style">
-  <link rel="preload" href="/assets/js/main.js" as="script">
-  <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body class="app-body landing-page">
+
 <header class="landing-hero">
   <nav class="landing-nav shell-panel">
-    <strong class="brand-mark">🏠 Rental Platform</strong>
+    <strong class="brand-mark">🏠 NestFinder</strong>
     <div class="landing-links">
       <a href="./index.html">Home</a>
       <a href="./pages/about.html">About</a>
       <a href="./pages/discover.html">Discover</a>
-      <a href="./pages/terms.html">Terms & Conditions</a>
+      <a href="./pages/terms.html">Terms &amp; Conditions</a>
     </div>
     <div class="actions-row nav-actions">
-      <a id="loginBtn" class="btn btn-secondary" href="./pages/login.html">Login</a>
-      <a id="signupBtn" class="btn btn-primary" href="./pages/register.html">Sign up</a>
+      <a id="loginBtn"  class="btn btn-secondary" href="./pages/login.html">Login</a>
+      <a id="signupBtn" class="btn btn-primary"   href="./pages/register.html">Sign up</a>
     </div>
   </nav>
 
   <div class="landing-grid">
     <div class="hero-copy">
       <span class="hero-chip">Curated rentals · Verified owners</span>
-      <h1>Find your next home in a <span>premium rental workspace</span>.</h1>
-      <p>Designed for speed, clarity, and trust. Search listings, compare locations, and move from discovery to agreement with confidence.</p>
+      <h1>Find your next home with <span>NestFinder</span>.</h1>
+      <p>Search listings, compare locations, and move from discovery to agreement with confidence.</p>
 
-      <div class="actions-row">
-        <a class="btn btn-primary" href="./pages/discover.html">Explore listings</a>
+      <!-- ── Hero search bar — redirects to discover with URL params ── -->
+      <form id="heroSearchForm" class="hero-search-bar" autocomplete="off">
+        <div class="hero-search-field">
+          <label for="heroCity" class="sr-only">City</label>
+          <input id="heroCity" type="text" placeholder="🏙 City (e.g. Bangalore)" autocomplete="off" />
+        </div>
+        <div class="hero-search-field">
+          <label for="heroStatus" class="sr-only">Status</label>
+          <select id="heroStatus">
+            <option value="Available">Available</option>
+            <option value="">Any status</option>
+          </select>
+        </div>
+        <div class="hero-search-field">
+          <label for="heroBudget" class="sr-only">Max Budget</label>
+          <input id="heroBudget" type="text" inputmode="numeric" placeholder="💰 Max rent (₹)" autocomplete="off" />
+        </div>
+        <button class="btn btn-primary" type="submit">Search</button>
+      </form>
+
+      <div class="actions-row" style="margin-top:1rem">
         <a class="btn btn-secondary" href="./pages/about.html">See platform benefits</a>
       </div>
     </div>
@@ -47,7 +63,7 @@
       <div class="hero-illustration" aria-hidden="true">
         <div class="illustration-house"></div>
         <div class="illustration-card">
-          <p>🏢 120+ verified listings</p>
+          <p>🏢 Verified listings</p>
           <p>📍 Real-time location matching</p>
           <p>🔐 Secure agreements + payments</p>
         </div>
@@ -62,17 +78,30 @@
 <main class="page-shell content-stack">
   <section class="page-card">
     <h2 class="section-title">Popular locations</h2>
-    <p class="section-subtitle">Live market view from active listings.</p>
-    <div id="popularLocations" class="actions-row"></div>
+    <p class="section-subtitle">Live market view from active listings. Click a city to explore.</p>
+    <div id="popularLocations" class="actions-row" style="flex-wrap:wrap;gap:0.5rem"></div>
   </section>
 </main>
 
 <footer class="site-footer page-shell shell-panel">
-  <p>© 2026 Rental Platform · Transparent renting for everyone.</p>
+  <p>© 2026 NestFinder · Transparent renting for everyone.</p>
 </footer>
-<script type="module" src="./js/authGuard.js"></script>
-<script type="module" src="./js/core/toast.js"></script>
+
 <script type="module" src="./js/modules/home.js"></script>
-  <script src="/assets/js/main.js" defer></script>
+<script type="module">
+  // Hero search → redirect to discover page with URL params
+  const form = document.getElementById("heroSearchForm");
+  form?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const city   = document.getElementById("heroCity").value.trim();
+    const status = document.getElementById("heroStatus").value;
+    const budget = document.getElementById("heroBudget").value.trim();
+    const params = new URLSearchParams();
+    if (city)   params.set("city",   city);
+    if (status) params.set("status", status);
+    if (budget) params.set("budget", budget);
+    window.location.href = `./pages/discover.html?${params.toString()}`;
+  });
+</script>
 </body>
 </html>

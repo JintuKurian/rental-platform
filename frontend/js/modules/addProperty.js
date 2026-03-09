@@ -1,20 +1,23 @@
 import { requireUser } from "../core/auth.js";
-import { createProperty } from "../services/propertyService.js";
+import { createProperty, uploadPropertyImage } from "../services/propertyService.js";
 import { validatePropertyPayload } from "../utils/validators.js";
 import { showToast } from "../utils/helpers.js";
+import supabaseClient from "../core/supabaseClient.js";
 
 const user = await requireUser(["owner"]);
 if (!user) throw new Error("Unauthorised");
 
 // ── DOM refs ──────────────────────────────────────────────────
-const form            = document.getElementById("propertyForm");
-const typeSelect      = document.getElementById("propertyType");
-const imageInput      = document.getElementById("propertyImages");
-const previewGrid     = document.getElementById("imagePreviewGrid");
+const form             = document.getElementById("propertyForm");
+const typeSelect       = document.getElementById("propertyType");
+const imageInput       = document.getElementById("propertyImages");
+const dropZone         = document.getElementById("dropZone");
+const previewGrid      = document.getElementById("imagePreviewGrid");
 const noImgPlaceholder = document.getElementById("noImagePlaceholder");
-const detailsHint     = document.getElementById("detailsHint");
+const progressWrap     = document.getElementById("uploadProgressWrap");
+const detailsHint      = document.getElementById("detailsHint");
 
-// Field wrapper refs (use HTML hidden attribute — toggled by JS)
+// ── Field wrapper refs ────────────────────────────────────────
 const FIELD = {
   bedrooms:    document.getElementById("field-bedrooms"),
   bathrooms:   document.getElementById("field-bathrooms"),
@@ -23,7 +26,6 @@ const FIELD = {
   usage:       document.getElementById("field-usage"),
 };
 
-// Input refs (cleared when their wrapper is hidden)
 const INPUT = {
   bedrooms:    document.getElementById("bedrooms"),
   bathrooms:   document.getElementById("bathrooms"),
@@ -33,7 +35,6 @@ const INPUT = {
 };
 
 // ── Field visibility map (per spec) ──────────────────────────
-//   Key  → list of field keys to SHOW (others are hidden)
 const TYPE_FIELD_MAP = {
   apartment:  ["bedrooms", "bathrooms"],
   house:      ["bedrooms", "bathrooms"],
@@ -62,44 +63,38 @@ function applyTypeVisibility() {
     if (!wrapper) return;
     const show = visible.has(name);
     wrapper.hidden = !show;
-
-    // Clear & un-require hidden inputs so they don't block form submit
     const input = INPUT[name];
-    if (input) {
-      if (!show) {
-        input.value    = "";
-        input.required = false;
-      }
-    }
+    if (input && !show) { input.value = ""; input.required = false; }
   });
 
   if (detailsHint) detailsHint.textContent = HINTS[key] || HINTS[""];
 }
 
 // ── Image queue ───────────────────────────────────────────────
-let imageQueue = []; // Array of { file: File, objectUrl: string }
+let imageQueue = []; // { file: File, objectUrl: string }
 
 function syncPreviewUI() {
   const hasImages = imageQueue.length > 0;
   noImgPlaceholder.hidden = hasImages;
-
   previewGrid.innerHTML = "";
 
   imageQueue.forEach(({ file, objectUrl }, index) => {
-    const item = document.createElement("div");
-    item.className = "preview-item";
+    const item      = document.createElement("div");
+    item.className  = "preview-item";
 
-    const img = document.createElement("img");
-    img.src = objectUrl;
-    img.alt = `Property photo ${index + 1}`;
+    const img       = document.createElement("img");
+    img.src         = objectUrl;
+    img.alt         = `Property photo ${index + 1}`;
 
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.className = "remove-btn";
-    removeBtn.title = "Remove image";
-    removeBtn.textContent = "✕";
+    const removeBtn         = document.createElement("button");
+    removeBtn.type          = "button";
+    removeBtn.className     = "remove-btn";
+    removeBtn.title         = "Remove image";
+    removeBtn.textContent   = "✕";
     removeBtn.dataset.index = String(index);
 
+    // Show file name as tooltip
+    item.title = file.name;
     item.appendChild(img);
     item.appendChild(removeBtn);
     previewGrid.appendChild(item);
@@ -108,17 +103,10 @@ function syncPreviewUI() {
 
 function addImages(files) {
   const remaining = 10 - imageQueue.length;
-  if (remaining <= 0) {
-    showToast("Maximum 10 photos allowed", "warning");
-    return;
-  }
+  if (remaining <= 0) { showToast("Maximum 10 photos allowed", "warning"); return; }
   const toAdd = files.slice(0, remaining);
-  if (files.length > remaining) {
-    showToast(`Only first ${remaining} photos added (max 10)`, "warning");
-  }
-  toAdd.forEach((file) => {
-    imageQueue.push({ file, objectUrl: URL.createObjectURL(file) });
-  });
+  if (files.length > remaining) showToast(`Only first ${remaining} photos added (max 10)`, "warning");
+  toAdd.forEach((file) => imageQueue.push({ file, objectUrl: URL.createObjectURL(file) }));
   syncPreviewUI();
 }
 
@@ -128,12 +116,49 @@ function removeImage(index) {
   syncPreviewUI();
 }
 
+// ── Upload progress UI ────────────────────────────────────────
+function showProgress(items) {
+  // items: [{ name: string, id: string }]
+  progressWrap.innerHTML = "";
+  progressWrap.classList.add("visible");
+  items.forEach(({ name, id }) => {
+    progressWrap.insertAdjacentHTML("beforeend", `
+      <div class="upload-progress-item" id="prog-${id}">
+        <span>📷 ${name}</span>
+        <div class="progress-bar-track"><div class="progress-bar-fill" id="fill-${id}" style="width:0%"></div></div>
+      </div>`);
+  });
+}
+
+function updateProgress(id, pct, done = false) {
+  const fill = document.getElementById(`fill-${id}`);
+  if (fill) fill.style.width = `${pct}%`;
+  if (done) {
+    const item = document.getElementById(`prog-${id}`);
+    if (item) item.querySelector("span").textContent = `✓ ${item.querySelector("span").textContent.replace("📷 ", "")}`;
+  }
+}
+
+function hideProgress() { progressWrap.classList.remove("visible"); }
+
+// ── Drag-and-drop ─────────────────────────────────────────────
+if (dropZone) {
+  dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+  dropZone.addEventListener("dragleave", ()  => dropZone.classList.remove("drag-over"));
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("drag-over");
+    const files = Array.from(e.dataTransfer?.files || []).filter((f) => f.type.startsWith("image/"));
+    if (files.length) addImages(files);
+  });
+}
+
 // ── Events ────────────────────────────────────────────────────
 typeSelect.addEventListener("change", applyTypeVisibility);
 
 imageInput.addEventListener("change", (e) => {
   const files = Array.from(e.target.files || []);
-  imageInput.value = ""; // reset so same file can be re-selected
+  imageInput.value = "";
   if (files.length) addImages(files);
 });
 
@@ -143,6 +168,7 @@ previewGrid.addEventListener("click", (e) => {
   removeImage(Number(btn.dataset.index));
 });
 
+// ── Form submit ───────────────────────────────────────────────
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -150,7 +176,6 @@ form.addEventListener("submit", async (e) => {
   const key          = propertyType.toLowerCase();
   const visible      = new Set(TYPE_FIELD_MAP[key] || []);
 
-  // Build payload
   const payload = {
     title:         document.getElementById("title").value.trim(),
     property_type: propertyType,
@@ -172,32 +197,81 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  const publishBtn = document.getElementById("publishBtn");
-  publishBtn.disabled    = true;
-  publishBtn.textContent = "Publishing…";
+  const publishBtn         = document.getElementById("publishBtn");
+  publishBtn.disabled      = true;
+  publishBtn.textContent   = "Publishing…";
 
-  const imageFiles = imageQueue.map((q) => q.file);
-  const { data, error } = await createProperty(payload, imageFiles);
+  // ── Step 1: Create property (no images yet) ───────────────
+  const { data: property, error: propError } = await createProperty(payload, []); // images uploaded separately below
 
-  if (error || !data?.property_id) {
-    const msg = error?.message || "Failed to create property";
-    showToast(msg, "error");
+  if (propError || !property?.property_id) {
+    showToast(propError?.message || "Failed to create property", "error");
     publishBtn.disabled    = false;
     publishBtn.textContent = "🏠 Publish Property";
     return;
+  }
+
+  const propertyId = property.property_id;
+
+  // ── Step 2: Upload images with progress ───────────────────
+  if (imageQueue.length > 0) {
+    const progressItems = imageQueue.map((q, i) => ({ name: q.file.name, id: String(i) }));
+    showProgress(progressItems);
+
+    for (let i = 0; i < imageQueue.length; i++) {
+      const { file } = imageQueue[i];
+      const id = String(i);
+      updateProgress(id, 30);
+
+      const ext      = file.name.split(".").pop();
+      const fileName = `${propertyId}_${Date.now()}_${i}.${ext}`;
+      const filePath = `properties/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabaseClient.storage
+        .from("property-images")
+        .upload(filePath, file, { upsert: false });
+
+      if (uploadError) {
+        showToast(`Failed to upload ${file.name}: ${uploadError.message}`, "error");
+        updateProgress(id, 100, true);
+        continue;
+      }
+
+      updateProgress(id, 70);
+
+      // Get public URL
+      const { data: urlData } = supabaseClient.storage
+        .from("property-images")
+        .getPublicUrl(filePath);
+
+      // Insert into property_images table
+      const { error: insertError } = await supabaseClient
+        .from("property_images")
+        .insert([{ property_id: propertyId, image_url: urlData.publicUrl }]);
+
+      if (insertError) {
+        showToast(`Image saved but URL insert failed: ${insertError.message}`, "error");
+      }
+
+      updateProgress(id, 100, true);
+    }
   }
 
   showToast("Property published successfully! ✓", "success");
   localStorage.setItem("propertiesUpdatedAt", String(Date.now()));
 
   // Cleanup
-  imageQueue.forEach((q) => URL.revokeObjectURL(q.objectUrl));
-  imageQueue = [];
-  form.reset();
-  syncPreviewUI();
-  applyTypeVisibility();
-  publishBtn.disabled    = false;
-  publishBtn.textContent = "🏠 Publish Property";
+  setTimeout(() => {
+    imageQueue.forEach((q) => URL.revokeObjectURL(q.objectUrl));
+    imageQueue = [];
+    form.reset();
+    syncPreviewUI();
+    applyTypeVisibility();
+    hideProgress();
+    publishBtn.disabled    = false;
+    publishBtn.textContent = "🏠 Publish Property";
+  }, 1500);
 });
 
 // ── Init ─────────────────────────────────────────────────────

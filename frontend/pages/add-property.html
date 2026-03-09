@@ -9,11 +9,28 @@
   <link rel="stylesheet" href="../css/forms.css" />
   <link rel="stylesheet" href="../css/dashboard.css" />
   <style>
-    /* ── Dynamic field transitions ── */
-    .field-group { transition: opacity 0.18s ease; }
-    .field-group[hidden] { display: none !important; }
-
-    /* ── Image preview grid ── */
+    /* ── Drag-drop zone ── */
+    .drop-zone {
+      border: 2px dashed var(--line-strong);
+      border-radius: var(--radius-sm);
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.18s, background 0.18s;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-top: 0.8rem;
+      position: relative;
+    }
+    .drop-zone.drag-over { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    .drop-zone svg { display: block; margin: 0 auto 0.5rem; opacity: 0.5; }
+    .drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    /* ── Upload progress bar ── */
+    .upload-progress-wrap { margin-top: 1rem; display: none; flex-direction: column; gap: 0.45rem; }
+    .upload-progress-wrap.visible { display: flex; }
+    .upload-progress-item { font-size: 0.8rem; color: var(--text-secondary); }
+    .progress-bar-track { background: var(--line); border-radius: 999px; height: 6px; overflow: hidden; margin-top: 3px; }
+    .progress-bar-fill  { height: 6px; border-radius: 999px; background: var(--primary); transition: width 0.3s ease; }
     .preview-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, 130px);
@@ -191,14 +208,20 @@
         <!-- ── Images ── -->
         <div class="form-section card">
           <h3 class="section-title">Property Photos</h3>
-          <p class="section-subtitle">Add up to 10 photos. Click thumbnails' ✕ to remove.</p>
+          <p class="section-subtitle">Add up to 10 photos — drag &amp; drop or click to browse.</p>
 
-          <div style="margin-top:0.8rem">
-            <label class="upload-label" for="propertyImages">
-              📷 Choose Photos
-            </label>
+          <div id="dropZone" class="drop-zone">
             <input type="file" id="propertyImages" accept="image/*" multiple />
-            <p class="upload-hint">JPG, PNG, WEBP — multiple files supported.</p>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4 16l4-4 4 4m4-4l4 4M16 8l-4-4-4 4M12 4v12"/>
+            </svg>
+            <p><strong>Click to browse</strong> or drag &amp; drop images here</p>
+            <p class="upload-hint" style="margin-top:0.25rem">JPG, PNG, WEBP — max 10 photos</p>
+          </div>
+
+          <!-- Per-image upload progress (shown during publish) -->
+          <div id="uploadProgressWrap" class="upload-progress-wrap">
+            <!-- filled by JS during submission -->
           </div>
 
           <!-- Preview grid filled by JS -->
