@@ -143,8 +143,10 @@ async function saveProfile() {
   if (baseUser.role === "owner") {
     const { error } = await supabaseClient
       .from("owners")
-      .update({ phone: phoneValue, city: cityValue, address: addressValue })
-      .eq("user_id", baseUser.user_id);
+      .upsert(
+        { user_id: baseUser.user_id, phone: phoneValue, city: cityValue, address: addressValue },
+        { onConflict: "user_id" }
+      );
 
     if (error) { showToast(error.message || "Failed to save profile", "error"); return; }
   }
@@ -152,13 +154,16 @@ async function saveProfile() {
   if (baseUser.role === "tenant") {
     const { error } = await supabaseClient
       .from("tenants")
-      .update({
-        phone:             phoneValue,
-        city:              cityValue,
-        occupation:        roleProfile?.occupation        || null,
-        permanent_address: roleProfile?.permanent_address || null
-      })
-      .eq("user_id", baseUser.user_id);
+      .upsert(
+        {
+          user_id: baseUser.user_id,
+          phone:             phoneValue,
+          city:              cityValue,
+          occupation:        roleProfile?.occupation        || null,
+          permanent_address: roleProfile?.permanent_address || null
+        },
+        { onConflict: "user_id" }
+      );
 
     if (error) { showToast(error.message || "Failed to save profile", "error"); return; }
   }
