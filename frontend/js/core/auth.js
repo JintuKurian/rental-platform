@@ -81,7 +81,7 @@ async function getUserWithProfileByEmail(email) {
   if (user.role === "tenant") {
     const { data } = await supabaseClient
       .from("tenants")
-      .select("phone,occupation,permanent_address,city")
+      .select("phone,aadhaar_no,occupation,permanent_address,city")
       .eq("user_id", user.user_id)
       .maybeSingle();
     tenantProfile = data;

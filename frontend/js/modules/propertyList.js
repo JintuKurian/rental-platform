@@ -56,19 +56,32 @@ function canDelete(property) {
 }
 
 async function fetchProperties() {
-  let data;
-  let error;
+  const searchVal = searchInput?.value.trim() || "";
+  const cityVal   = cityFilter?.value.trim()   || "";
+  const statusVal = statusFilter?.value.trim()  || "";
+
+  let data, error;
 
   if (user.role === "owner") {
     ({ data, error } = await getPropertiesByOwnerUserId(user.user_id, {
-      city: cityFilter.value.trim(),
-      status: statusFilter.value.trim(),
-      search: searchInput?.value.trim() || ""
+      city:   cityVal,
+      status: statusVal,
+      search: searchVal
     }));
   } else if (user.role === "tenant") {
-    ({ data, error } = await listProperties({ city: cityFilter.value.trim(), status: "Available" }));
+    // Tenants always see only Available; search/city still work
+    ({ data, error } = await listProperties({
+      city:   cityVal,
+      status: "Available",
+      search: searchVal
+    }));
   } else {
-    ({ data, error } = await listProperties({ city: cityFilter.value.trim(), status: statusFilter.value.trim() }));
+    // Admin — all filters active
+    ({ data, error } = await listProperties({
+      city:   cityVal,
+      status: statusVal,
+      search: searchVal
+    }));
   }
 
   if (error) {
@@ -161,7 +174,14 @@ async function handleEdit(propertyId) {
   fetchProperties();
 }
 
-searchBtn.addEventListener("click", fetchProperties);
+searchBtn?.addEventListener("click", fetchProperties);
+
+// Allow pressing Enter in text inputs to trigger search
+[searchInput, cityFilter].forEach((input) => {
+  input?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); fetchProperties(); }
+  });
+});
 propertyCards.addEventListener("click", async (event) => {
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;

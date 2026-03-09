@@ -8,7 +8,7 @@ import { showToast } from "../utils/helpers.js";
 const user = await requireUser(["tenant"]);
 if (!user) throw new Error("Unauthorised");
 
-// ── Profile completion banner ─────────────────────────────────
+// ── DOM refs ──────────────────────────────────────────────────
 const profilePrompt       = document.getElementById("tenantProfilePrompt");
 const completeProfileForm = document.getElementById("completeProfileForm");
 const openBtn             = document.getElementById("openCompleteProfileBtn");
@@ -16,29 +16,57 @@ const closeBtn            = document.getElementById("closeCompleteProfileBtn");
 const cancelBtn           = document.getElementById("cancelCompleteProfileBtn");
 const tenantForm          = document.getElementById("tenantCompleteForm");
 
-// All tenant columns must be filled
-const profileComplete = Boolean(
-  user.phone && user.city && user.aadhaar_no && user.occupation && user.permanent_address
-);
+// ── Live DB check for profile completion ─────────────────────
+// Do NOT rely on localStorage cache — the trigger creates an empty tenants row
+// on registration, so localStorage may have no tenant fields at all.
+async function checkProfileComplete() {
+  const { data, error } = await supabaseClient
+    .from("tenants")
+    .select("phone, city, aadhaar_no, occupation, permanent_address")
+    .eq("user_id", user.user_id)
+    .maybeSingle();
 
-function hideBanner() {
-  profilePrompt.hidden = true;
-  completeProfileForm.hidden = true;
+  if (error) {
+    console.warn("Could not check profile status:", error.message);
+    return false;
+  }
+
+  // Profile is complete only when ALL required fields have values
+  return Boolean(
+    data?.phone &&
+    data?.city &&
+    data?.aadhaar_no &&
+    data?.occupation &&
+    data?.permanent_address
+  );
+}
+
+function showBanner()  { if (profilePrompt) profilePrompt.hidden = false; }
+function hideBanner()  {
+  if (profilePrompt)       profilePrompt.hidden = true;
+  if (completeProfileForm) completeProfileForm.hidden = true;
 }
 function openForm() {
-  profilePrompt.hidden = true;
-  completeProfileForm.hidden = false;
+  if (profilePrompt)       profilePrompt.hidden = true;
+  if (completeProfileForm) completeProfileForm.hidden = false;
 }
-function closeForm() {
-  profilePrompt.hidden = profileComplete;
-  completeProfileForm.hidden = true;
+function closeForm(profileComplete) {
+  if (profilePrompt)       profilePrompt.hidden = profileComplete;
+  if (completeProfileForm) completeProfileForm.hidden = true;
 }
 
-if (!profileComplete && profilePrompt) profilePrompt.hidden = false;
+// ── Init banner state from live DB ───────────────────────────
+const isComplete = await checkProfileComplete();
+if (!isComplete) {
+  showBanner();
+} else {
+  hideBanner();
+}
 
+// ── Event listeners ───────────────────────────────────────────
 openBtn?.addEventListener("click",  openForm);
-closeBtn?.addEventListener("click", closeForm);
-cancelBtn?.addEventListener("click", closeForm);
+closeBtn?.addEventListener("click", () => closeForm(isComplete));
+cancelBtn?.addEventListener("click", () => closeForm(isComplete));
 
 tenantForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -54,9 +82,9 @@ tenantForm?.addEventListener("submit", async (e) => {
     return;
   }
 
-  const saveBtn = document.getElementById("saveTenantProfileBtn");
-  saveBtn.disabled = true;
-  saveBtn.textContent = "Saving…";
+  const saveBtn         = document.getElementById("saveTenantProfileBtn");
+  saveBtn.disabled      = true;
+  saveBtn.textContent   = "Saving…";
 
   const { error } = await supabaseClient
     .from("tenants")
@@ -65,22 +93,24 @@ tenantForm?.addEventListener("submit", async (e) => {
       { onConflict: "user_id" }
     );
 
-  saveBtn.disabled = false;
+  saveBtn.disabled    = false;
   saveBtn.textContent = "Save & Continue";
 
   if (error) {
-    console.error("Tenant profile upsert error:", error);
     showToast(error.message || "Failed to save profile", "error");
     return;
   }
 
-  const stored = JSON.parse(localStorage.getItem("appUser") || "{}");
-  localStorage.setItem("appUser", JSON.stringify({
-    ...stored, phone, aadhaar_no, occupation, city, permanent_address
-  }));
+  // Update localStorage cache so profile page also reflects new data
+  try {
+    const stored = JSON.parse(localStorage.getItem("appUser") || "{}");
+    localStorage.setItem("appUser", JSON.stringify({
+      ...stored, phone, aadhaar_no, occupation, city, permanent_address
+    }));
+  } catch (_) { /* ignore */ }
 
   showToast("Profile saved ✓", "success");
-  hideBanner();
+  hideBanner(); // permanently hide — no re-show on close since upsert succeeded
 });
 
 // ── Dashboard stats ───────────────────────────────────────────

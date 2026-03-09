@@ -26,7 +26,7 @@ const PROPERTY_SELECT_QUERY = `
   property_images(image_url)
 `;
 
-export async function listProperties({ city = "", status = "" } = {}) {
+export async function listProperties({ city = "", status = "", search = "" } = {}) {
   let query = supabaseClient
     .from("properties")
     .select(PROPERTY_SELECT_QUERY)
@@ -34,6 +34,7 @@ export async function listProperties({ city = "", status = "" } = {}) {
 
   if (city) query = query.ilike("city", `%${city}%`);
   if (status) query = query.eq("status", status);
+  if (search) query = query.or(`title.ilike.%${search}%,city.ilike.%${search}%,property_type.ilike.%${search}%`);
 
   return query;
 }

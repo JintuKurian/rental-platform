@@ -17,20 +17,30 @@ const closeBtn            = document.getElementById("closeCompleteProfileBtn");
 const cancelBtn           = document.getElementById("cancelCompleteProfileBtn");
 const ownerForm           = document.getElementById("ownerCompleteForm");
 
-// Profile is complete only if phone, city, address AND owner_type are all set
-const profileComplete = Boolean(user.phone && user.city && user.address && user.owner_type);
+// ── Live DB check for profile completion ────────────────────
+// Do NOT rely on localStorage cache — the trigger creates an empty owners row
+// on registration, so cached user object may have no owner fields.
+const { data: ownerRow } = await supabaseClient
+  .from("owners")
+  .select("phone, city, address, owner_type")
+  .eq("user_id", user.user_id)
+  .maybeSingle();
+
+const profileComplete = Boolean(
+  ownerRow?.phone && ownerRow?.city && ownerRow?.address && ownerRow?.owner_type
+);
 
 function hideBanner() {
-  profilePrompt.hidden = true;
-  completeProfileForm.hidden = true;
+  if (profilePrompt)       profilePrompt.hidden = true;
+  if (completeProfileForm) completeProfileForm.hidden = true;
 }
 function openForm() {
-  profilePrompt.hidden = true;
-  completeProfileForm.hidden = false;
+  if (profilePrompt)       profilePrompt.hidden = true;
+  if (completeProfileForm) completeProfileForm.hidden = false;
 }
 function closeForm() {
-  profilePrompt.hidden = profileComplete;
-  completeProfileForm.hidden = true;
+  if (profilePrompt)       profilePrompt.hidden = profileComplete;
+  if (completeProfileForm) completeProfileForm.hidden = true;
 }
 
 if (!profileComplete && profilePrompt) profilePrompt.hidden = false;
