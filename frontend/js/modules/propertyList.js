@@ -1,5 +1,5 @@
 import { requireUser } from "../core/auth.js";
-import { listProperties, getPropertiesByOwnerUserId, deleteProperty, updateProperty, listPropertyImagesForPropertyIds, PROPERTY_IMAGE_PLACEHOLDER } from "../services/propertyService.js";
+import { listProperties, getPropertiesByOwnerUserId, deleteProperty, updateProperty, PROPERTY_IMAGE_PLACEHOLDER } from "../services/propertyService.js";
 import { formatCurrency, showToast } from "../utils/helpers.js";
 
 const user = await requireUser(["admin", "owner", "tenant"]);
@@ -45,23 +45,7 @@ function getRelevantDetails(property) {
 }
 
 
-async function attachPropertyImages(properties = []) {
-  const ids = properties.map((property) => property.property_id);
-  const { data, error } = await listPropertyImagesForPropertyIds(ids);
-  if (error) return properties;
-
-  const imageMap = (data || []).reduce((acc, row) => {
-    const key = Number(row.property_id);
-    if (!acc[key]) acc[key] = [];
-    acc[key].push({ image_url: row.image_url });
-    return acc;
-  }, {});
-
-  return properties.map((property) => ({
-    ...property,
-    property_images: imageMap[Number(property.property_id)] || []
-  }));
-}
+// property_images are already joined via PROPERTY_SELECT_QUERY – no extra fetch needed
 
 function canEdit(property) {
   return user.role === "owner" && Number(property.owners?.user_id) === Number(user.user_id);
@@ -92,8 +76,7 @@ async function fetchProperties() {
     return;
   }
 
-  const rowsWithImages = await attachPropertyImages(data || []);
-  renderCards(rowsWithImages);
+  renderCards(data || []);
 }
 
 function renderCards(properties) {
@@ -127,10 +110,10 @@ function renderCards(properties) {
 
     return `
       <article class="property-card card">
-        <img src="${imageUrl}" alt="${property.title || "Property"}" />
+        <img class="property-img" src="${imageUrl}" alt="${property.title || "Property"}" onerror="this.src='${PROPERTY_IMAGE_PLACEHOLDER}'" />
         <div class="property-body">
           <h4>${property.title || "Untitled listing"}</h4>
-          <p class="property-meta">City: ${property.city || "-"}</p>
+          <p class="property-meta">📍 ${property.city || "—"}</p>
           <p><strong>Monthly Rent:</strong> ${formatCurrency(property.rent_amount)}</p>
           <p><strong>Status:</strong> <span class="${statusClass(property.status)}">${property.status || "Unknown"}</span></p>
           <p class="property-meta"><strong>Owner:</strong> ${ownerName}</p>

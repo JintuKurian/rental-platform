@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Profile | Rental Platform</title>
+  <title>Your Profile | NestFinder</title>
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
@@ -13,26 +13,67 @@
 
   <main class="page-shell">
     <section class="page-card profile-page-card">
-      <div class="profile-page-head">
-        <h1 class="section-title">Your Profile</h1>
-        <div class="actions-row profile-actions">
-          <button id="editProfileBtn" class="btn btn-primary" type="button">Edit Profile</button>
-          <button id="saveProfileBtn" class="btn btn-primary" type="submit" form="profileForm" hidden>Save Changes</button>
-          <button id="cancelProfileBtn" class="btn btn-secondary" type="button" hidden>Cancel</button>
-          <button id="logoutBtn" class="btn btn-danger" type="button">Logout</button>
+
+      <!-- Hero strip: avatar + name + role -->
+      <div class="profile-hero" id="profileHero">
+        <div class="profile-hero-avatar" id="profileHeroAvatar">?</div>
+        <div class="profile-hero-info">
+          <p class="profile-hero-name" id="profileHeroName">Loading…</p>
+          <span class="profile-hero-role" id="profileHeroRole">—</span>
         </div>
       </div>
 
+      <!-- Page head: title + action buttons -->
+      <div class="profile-page-head">
+        <div>
+          <h1 class="section-title">Your Profile</h1>
+          <p class="section-subtitle">View and manage your account information.</p>
+        </div>
+        <div class="actions-row profile-actions">
+          <button id="editProfileBtn"   class="btn btn-primary"   type="button">✏️ Edit Profile</button>
+          <button id="saveProfileBtn"   class="btn btn-primary"   type="submit" form="profileForm" hidden>💾 Save Changes</button>
+          <button id="cancelProfileBtn" class="btn btn-secondary" type="button" hidden>✕ Cancel</button>
+          <button id="logoutBtn"        class="btn btn-danger"    type="button">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Profile fields -->
       <form id="profileForm" class="form-grid profile-grid">
-        <div class="profile-item"><label>Name</label><p id="profileNameView" class="profile-value"></p><input id="profileName" type="text" readonly hidden /></div>
-        <div class="profile-item"><label>Email</label><p id="profileEmailView" class="profile-value"></p><input id="profileEmail" type="email" readonly hidden /></div>
-        <div class="profile-item"><label>Role</label><p id="profileRoleView" class="profile-value"></p><input id="profileRole" type="text" readonly hidden /></div>
-        <div class="profile-item"><label>Phone</label><p id="profilePhoneView" class="profile-value"></p><input id="profilePhone" type="text" required readonly hidden /></div>
-        <div class="profile-item"><label>City</label><p id="profileCityView" class="profile-value"></p><input id="profileCity" type="text" required readonly hidden /></div>
+        <div class="profile-item">
+          <label>Full Name</label>
+          <p id="profileNameView" class="profile-value"></p>
+          <input id="profileName" type="text" readonly hidden />
+        </div>
+
+        <div class="profile-item">
+          <label>Email Address</label>
+          <p id="profileEmailView" class="profile-value"></p>
+          <input id="profileEmail" type="email" readonly hidden />
+        </div>
+
+        <div class="profile-item">
+          <label>Account Role</label>
+          <p id="profileRoleView" class="profile-value"></p>
+          <input id="profileRole" type="text" readonly hidden />
+        </div>
+
+        <div class="profile-item">
+          <label>Phone Number</label>
+          <p id="profilePhoneView" class="profile-value"></p>
+          <input id="profilePhone" type="text" placeholder="Enter phone number" required readonly hidden />
+        </div>
+
+        <div class="profile-item">
+          <label>City</label>
+          <p id="profileCityView" class="profile-value"></p>
+          <input id="profileCity" type="text" placeholder="Enter city" required readonly hidden />
+        </div>
       </form>
+
     </section>
   </main>
 
+  <div id="appFooter"></div>
 
   <script type="module" src="../js/authGuard.js"></script>
   <script type="module" src="../js/profile.js"></script>

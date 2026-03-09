@@ -1,10 +1,29 @@
-<div class="app-nav shell-panel navbar-container">
-  <a class="app-brand" data-href="index.html">🏠 Rental Platform</a>
-  <nav class="app-links">
+<div class="app-nav">
+  <!-- Brand -->
+  <a class="app-brand" data-href="index.html">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#4f46e5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    NestFinder
+  </a>
+
+  <!-- Nav Links -->
+  <nav class="app-links" id="appNavLinks">
     <a data-href="dashboards/tenant.html">Dashboard</a>
-    <a data-href="pages/property-list.html">My Rental</a>
+    <a data-href="pages/property-list.html">Browse Rentals</a>
+    <a data-href="pages/agreements.html">My Agreements</a>
     <a data-href="pages/payments.html">Payments</a>
     <a data-href="pages/maintenance.html">Maintenance</a>
     <a data-href="pages/profile.html">Profile</a>
   </nav>
+
+  <!-- User Actions -->
+  <div class="app-user-actions">
+    <a class="app-profile-link" data-href="pages/profile.html" id="navProfileChip">
+      <span class="app-avatar" id="navAvatar">?</span>
+      <span class="app-profile-meta">
+        <span class="app-profile-name" id="navUserName">User</span>
+        <span class="app-profile-role" id="navUserRole">tenant</span>
+      </span>
+    </a>
+    <button class="app-nav-toggle" id="navToggle" aria-label="Toggle menu" type="button">☰</button>
+  </div>
 </div>

@@ -7,10 +7,17 @@ function getBasePrefix() {
 }
 
 function getNavbarPath(role) {
-  if (role === "owner") return "components/navbars/ownerNavbar.html";
+  if (role === "owner")  return "components/navbars/ownerNavbar.html";
   if (role === "tenant") return "components/navbars/tenantNavbar.html";
-  if (role === "admin") return "components/navbars/adminNavbar.html";
+  if (role === "admin")  return "components/navbars/adminNavbar.html";
   return null;
+}
+
+function getUserInitials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 function markActiveLinks(root) {
@@ -20,6 +27,29 @@ function markActiveLinks(root) {
     const normalizedHref = href.replace(/^\.\.\//, "/");
     const isActive = currentPath.endsWith(normalizedHref) || currentPath === normalizedHref;
     link.classList.toggle("active", isActive);
+  });
+}
+
+function populateUserChip(container, user) {
+  const avatarEl   = container.querySelector("#navAvatar");
+  const nameEl     = container.querySelector("#navUserName");
+  const roleEl     = container.querySelector("#navUserRole");
+
+  if (!user) return;
+  if (avatarEl) avatarEl.textContent = getUserInitials(user.name || user.email || "U");
+  if (nameEl)   nameEl.textContent   = user.name  || user.email || "User";
+  if (roleEl)   roleEl.textContent   = user.role  || "";
+}
+
+function wireHamburger(container) {
+  const toggle = container.querySelector("#navToggle");
+  const links  = container.querySelector("#appNavLinks");
+  if (!toggle || !links) return;
+
+  toggle.addEventListener("click", () => {
+    const isOpen = links.classList.toggle("nav-open");
+    toggle.textContent = isOpen ? "✕" : "☰";
+    toggle.setAttribute("aria-expanded", String(isOpen));
   });
 }
 
@@ -57,6 +87,8 @@ async function loadNavbar() {
   if (!response.ok) return;
 
   container.innerHTML = await response.text();
+
+  // Resolve data-href → real href
   container.querySelectorAll("[data-href]").forEach((node) => {
     const href = node.getAttribute("data-href");
     node.setAttribute("href", `${prefix}${href}`);
@@ -64,6 +96,8 @@ async function loadNavbar() {
   });
 
   markActiveLinks(container);
+  populateUserChip(container, user);
+  wireHamburger(container);
   await loadFooter(prefix);
 }
 

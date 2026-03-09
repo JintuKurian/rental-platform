@@ -2,48 +2,61 @@ import supabaseClient from "./core/supabaseClient.js";
 import { logout, requireUser, storeUserSession } from "./core/auth.js";
 import { showToast } from "./utils/helpers.js";
 
-const profileForm = document.getElementById("profileForm");
-const profileCard = document.querySelector(".profile-page-card");
-const editProfileBtn = document.getElementById("editProfileBtn");
-const saveProfileBtn = document.getElementById("saveProfileBtn");
+const profileForm      = document.getElementById("profileForm");
+const profileCard      = document.querySelector(".profile-page-card");
+const editProfileBtn   = document.getElementById("editProfileBtn");
+const saveProfileBtn   = document.getElementById("saveProfileBtn");
 const cancelProfileBtn = document.getElementById("cancelProfileBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+const logoutBtn        = document.getElementById("logoutBtn");
 
-let baseUser = null;
-let roleProfile = null;
+let baseUser       = null;
+let roleProfile    = null;
 let originalProfile = null;
-let editMode = false;
+let editMode       = false;
 
-function getField(id) {
-  return document.getElementById(id);
-}
-
-function getValueNode(id) {
-  return document.getElementById(`${id}View`);
-}
-
+// ── Helpers ──────────────────────────────────────────────────
+function getField(id)     { return document.getElementById(id); }
+function getValueNode(id) { return document.getElementById(`${id}View`); }
 function getEditableFields() {
   return [getField("profilePhone"), getField("profileCity")];
 }
-
 function mergedProfile() {
   return { ...baseUser, ...(roleProfile || {}) };
 }
 
-function renderProfile(profile) {
-  getField("profileName").value = profile.name || "";
-  getField("profileEmail").value = profile.email || "";
-  getField("profileRole").value = profile.role || "";
-  getField("profilePhone").value = profile.phone || "";
-  getField("profileCity").value = profile.city || "";
-
-  getValueNode("profileName").textContent = profile.name || "-";
-  getValueNode("profileEmail").textContent = profile.email || "-";
-  getValueNode("profileRole").textContent = profile.role || "-";
-  getValueNode("profilePhone").textContent = profile.phone || "-";
-  getValueNode("profileCity").textContent = profile.city || "-";
+function getUserInitials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+// ── Render ────────────────────────────────────────────────────
+function renderProfile(profile) {
+  // Input values
+  getField("profileName").value  = profile.name  || "";
+  getField("profileEmail").value = profile.email || "";
+  getField("profileRole").value  = profile.role  || "";
+  getField("profilePhone").value = profile.phone || "";
+  getField("profileCity").value  = profile.city  || "";
+
+  // View text
+  getValueNode("profileName").textContent  = profile.name  || "—";
+  getValueNode("profileEmail").textContent = profile.email || "—";
+  getValueNode("profileRole").textContent  = profile.role  || "—";
+  getValueNode("profilePhone").textContent = profile.phone || "—";
+  getValueNode("profileCity").textContent  = profile.city  || "—";
+
+  // Hero strip
+  const heroAvatar = document.getElementById("profileHeroAvatar");
+  const heroName   = document.getElementById("profileHeroName");
+  const heroRole   = document.getElementById("profileHeroRole");
+  if (heroAvatar) heroAvatar.textContent = getUserInitials(profile.name || profile.email || "U");
+  if (heroName)   heroName.textContent   = profile.name  || profile.email || "—";
+  if (heroRole)   heroRole.textContent   = profile.role  || "—";
+}
+
+// ── Edit mode toggle ──────────────────────────────────────────
 function setEditMode(enabled) {
   editMode = Boolean(enabled) && (baseUser?.role === "owner" || baseUser?.role === "tenant");
 
@@ -52,20 +65,21 @@ function setEditMode(enabled) {
   });
 
   profileCard?.classList.toggle("is-editing", editMode);
-  editProfileBtn.hidden = editMode;
-  saveProfileBtn.hidden = !editMode;
+  editProfileBtn.hidden   = editMode;
+  saveProfileBtn.hidden   = !editMode;
   cancelProfileBtn.hidden = !editMode;
 }
 
+// ── Load ──────────────────────────────────────────────────────
 async function loadProfile() {
   const user = await requireUser(["admin", "owner", "tenant"]);
   if (!user) return;
 
   baseUser = {
     user_id: user.user_id,
-    name: user.name,
-    email: user.email,
-    role: user.role
+    name:    user.name,
+    email:   user.email,
+    role:    user.role
   };
 
   roleProfile = null;
@@ -81,7 +95,6 @@ async function loadProfile() {
       showToast(error.message || "Unable to load owner profile", "error");
       return;
     }
-
     roleProfile = owner;
   }
 
@@ -96,17 +109,16 @@ async function loadProfile() {
       showToast(error.message || "Unable to load tenant profile", "error");
       return;
     }
-
     roleProfile = tenant;
   }
 
   const merged = mergedProfile();
   originalProfile = {
-    name: merged.name || "",
+    name:  merged.name  || "",
     email: merged.email || "",
-    role: merged.role || "",
+    role:  merged.role  || "",
     phone: merged.phone || "",
-    city: merged.city || ""
+    city:  merged.city  || ""
   };
 
   renderProfile(originalProfile);
@@ -120,58 +132,48 @@ function restoreInitialValues() {
   setEditMode(false);
 }
 
+// ── Save ──────────────────────────────────────────────────────
 async function saveProfile() {
   if (!baseUser || !editMode) return;
 
-  const phoneValue = getField("profilePhone").value.trim();
-  const cityValue = getField("profileCity").value.trim();
+  const phoneValue   = getField("profilePhone").value.trim();
+  const cityValue    = getField("profileCity").value.trim();
   const addressValue = roleProfile?.address || null;
 
   if (baseUser.role === "owner") {
     const { error } = await supabaseClient
       .from("owners")
-      .update({
-        phone: phoneValue,
-        city: cityValue,
-        address: addressValue
-      })
+      .update({ phone: phoneValue, city: cityValue, address: addressValue })
       .eq("user_id", baseUser.user_id);
 
-    if (error) {
-      showToast(error.message || "Failed to save profile", "error");
-      return;
-    }
+    if (error) { showToast(error.message || "Failed to save profile", "error"); return; }
   }
 
   if (baseUser.role === "tenant") {
     const { error } = await supabaseClient
       .from("tenants")
       .update({
-        phone: phoneValue,
-        city: cityValue,
-        occupation: roleProfile?.occupation || null,
+        phone:             phoneValue,
+        city:              cityValue,
+        occupation:        roleProfile?.occupation        || null,
         permanent_address: roleProfile?.permanent_address || null
       })
       .eq("user_id", baseUser.user_id);
 
-    if (error) {
-      showToast(error.message || "Failed to save profile", "error");
-      return;
-    }
+    if (error) { showToast(error.message || "Failed to save profile", "error"); return; }
   }
 
   await loadProfile();
-  showToast("Profile updated successfully", "success");
+  showToast("Profile updated successfully ✓", "success");
 }
 
+// ── Events ────────────────────────────────────────────────────
 editProfileBtn?.addEventListener("click", () => setEditMode(true));
 cancelProfileBtn?.addEventListener("click", restoreInitialValues);
 profileForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   await saveProfile();
 });
-logoutBtn?.addEventListener("click", () => {
-  void logout();
-});
+logoutBtn?.addEventListener("click", () => { void logout(); });
 
 await loadProfile();
