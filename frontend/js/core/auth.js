@@ -1,5 +1,7 @@
 import supabaseClient from "./supabaseClient.js";
 
+const SESSION_RETRY_DELAYS_MS = [0, 120, 250, 500];
+
 function getLoginPath() {
   return "/pages/login.html";
 }
@@ -55,12 +57,44 @@ export function clearStoredUser() {
   localStorage.removeItem("loggedInUser");
 }
 
+function shouldRetrySessionLookup() {
+  return Boolean(getStoredUser() || getStoredAuthUser());
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+async function resolveSession({ retryIfStored = false } = {}) {
+  const delays = retryIfStored && shouldRetrySessionLookup() ? SESSION_RETRY_DELAYS_MS : [0];
+  let lastError = null;
+
+  for (const delay of delays) {
+    if (delay) await wait(delay);
+
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error) {
+      lastError = error;
+      continue;
+    }
+
+    const session = data?.session;
+    if (session?.user?.email) {
+      return { session, error: null };
+    }
+  }
+
+  return { session: null, error: lastError };
+}
+
 async function getUserWithProfileByEmail(email) {
   const normalizedEmail = String(email || "").trim().toLowerCase();
 
   const { data: user, error: userError } = await supabaseClient
     .from("users")
-    .select("user_id,name,email,role")
+    .select("user_id,name,email,role,auth_user_id")
     .eq("email", normalizedEmail)
     .single();
 
@@ -92,13 +126,12 @@ async function getUserWithProfileByEmail(email) {
     ...(ownerProfile || tenantProfile || {})
   };
 
-  storeUserSession({ id: user.user_id, email: user.email }, merged);
+  storeUserSession({ id: user.auth_user_id || user.user_id, email: user.email }, merged);
   return merged;
 }
 
 export async function syncStoredUserWithSession() {
-  const { data, error } = await supabaseClient.auth.getSession();
-  const session = data?.session;
+  const { session, error } = await resolveSession({ retryIfStored: true });
 
   if (error || !session?.user?.email) {
     clearStoredUser();
@@ -109,8 +142,7 @@ export async function syncStoredUserWithSession() {
 }
 
 export async function requireUser(allowedRoles = []) {
-  const { data, error } = await supabaseClient.auth.getSession();
-  const session = data?.session;
+  const { session, error } = await resolveSession({ retryIfStored: true });
 
   if (error || !session?.user?.email) {
     clearStoredUser();
@@ -153,13 +185,17 @@ export function updateNavbarAuthState(root = document, user = null) {
 
 export function watchAuthState(onChange) {
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-    if (!session?.user?.email) {
+    const activeSession = session?.user?.email
+      ? session
+      : (await resolveSession({ retryIfStored: true })).session;
+
+    if (!activeSession?.user?.email) {
       clearStoredUser();
       onChange(null);
       return;
     }
 
-    const user = await getUserWithProfileByEmail(session.user.email);
+    const user = await getUserWithProfileByEmail(activeSession.user.email);
     onChange(user);
   });
 }

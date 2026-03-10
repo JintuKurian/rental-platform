@@ -1,5 +1,5 @@
 import supabaseClient from "../core/supabaseClient.js";
-import { storeUserSession } from "../core/auth.js";
+import { storeUserSession, syncStoredUserWithSession } from "../core/auth.js";
 import { renderFlashMessage, showToast } from "../utils/helpers.js";
 
 const form = document.getElementById("loginForm");
@@ -37,6 +37,7 @@ if (form) {
     }
 
     storeUserSession(authData.user, appUser);
+    await syncStoredUserWithSession();
 
     const nextPage = getDashboardPath(appUser.role);
     if (!nextPage) {

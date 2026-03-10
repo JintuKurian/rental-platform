@@ -1,4 +1,4 @@
-import { getStoredUser, syncStoredUserWithSession } from "../js/core/auth.js";
+import { getStoredUser, syncStoredUserWithSession, watchAuthState } from "../js/core/auth.js";
 
 function getBasePrefix() {
   const path = window.location.pathname;
@@ -49,19 +49,23 @@ function wireHamburger(container) {
   });
 }
 
-async function loadNavbar() {
+async function renderNavbar(user) {
   const container = document.getElementById("dashboardNavbar");
   if (!container) return;
 
-  await syncStoredUserWithSession();
-  const user = getStoredUser();
   const role = user?.role;
   const navbarPath = getNavbarPath(role);
-  if (!navbarPath) return;
+  if (!navbarPath) {
+    container.innerHTML = "";
+    return;
+  }
 
   const prefix = getBasePrefix();
   const response = await fetch(`${prefix}${navbarPath}`);
-  if (!response.ok) return;
+  if (!response.ok) {
+    container.innerHTML = "";
+    return;
+  }
 
   container.innerHTML = await response.text();
 
@@ -76,5 +80,22 @@ async function loadNavbar() {
   wireHamburger(container);
   // Footer intentionally NOT loaded on authenticated app pages
 }
+
+async function loadNavbar() {
+  const storedUser = getStoredUser();
+  if (storedUser) {
+    await renderNavbar(storedUser);
+  }
+
+  const syncedUser = await syncStoredUserWithSession();
+  const resolvedUser = syncedUser || getStoredUser();
+  if (resolvedUser) {
+    await renderNavbar(resolvedUser);
+  }
+}
+
+watchAuthState((user) => {
+  void renderNavbar(user || getStoredUser());
+});
 
 void loadNavbar();
