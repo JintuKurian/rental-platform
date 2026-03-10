@@ -27,6 +27,13 @@ async function getOwnerIdForCurrentUser() {
 }
 
 function getBackLink() {
+  if (source === "browse-rentals") {
+    return {
+      label: "Back to browse rentals",
+      href: "../pages/browse-rentals.html"
+    };
+  }
+
   if (source === "owner-dashboard") {
     return {
       label: "Back to owner dashboard",

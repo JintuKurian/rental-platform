@@ -12,7 +12,6 @@ function getDashboardLinks(role) {
     return [
       ["Dashboard", "dashboards/owner.html"],
       ["Add Property", "pages/add-property.html"],
-      ["Properties", "dashboards/owner.html#ownerPropertiesSection"],
       ["Agreements", "pages/agreements.html"],
       ["Payments", "pages/payments.html"],
       ["Maintenance", "pages/maintenance.html"]
@@ -22,7 +21,7 @@ function getDashboardLinks(role) {
   if (role === "tenant") {
     return [
       ["Dashboard", "dashboards/tenant.html"],
-      ["Browse", "pages/discover.html"],
+      ["Browse", "pages/browse-rentals.html"],
       ["Agreements", "pages/agreements.html"],
       ["Payments", "pages/payments.html"],
       ["Maintenance", "pages/maintenance.html"]

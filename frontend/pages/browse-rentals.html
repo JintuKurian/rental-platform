@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse Rentals | NestFinder</title>
+  <meta name="description" content="Tenant workspace for browsing available rental listings." />
+  <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/forms.css" />
+</head>
+<body class="app-body">
+  <div class="utility-bar" id="dashboardNavbar"></div>
+
+  <main class="page-shell content-stack">
+    <section class="page-card content-stack">
+      <div class="panel-header">
+        <div>
+          <h1 class="section-title">Browse Rentals</h1>
+          <p class="section-subtitle">Tenant-only listing workspace for reviewing available rentals without dropping into the public discover flow.</p>
+        </div>
+      </div>
+
+      <div class="search-bar shell-panel discover-filter-card">
+        <div class="discover-filter-grid">
+          <div class="discover-filter-field">
+            <label for="browseSearchInput">Search</label>
+            <input id="browseSearchInput" type="text" placeholder="Title, city, or type" />
+          </div>
+          <div class="discover-filter-field">
+            <label for="browseCityFilter">City</label>
+            <input id="browseCityFilter" type="text" placeholder="e.g. Bangalore" />
+          </div>
+          <div class="discover-filter-field">
+            <label for="browseStatusFilter">Status</label>
+            <select id="browseStatusFilter">
+              <option value="Available" selected>Available</option>
+              <option value="">Any status</option>
+              <option value="Rented">Rented</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="discover-filter-field">
+            <label for="browseBudgetFilter">Budget (Max Rs)</label>
+            <input id="browseBudgetFilter" type="text" inputmode="numeric" placeholder="e.g. 25000" />
+          </div>
+          <div class="toolbar-action-wrap discover-filter-action">
+            <button id="browseSearchBtn" class="btn btn-primary" type="button">Search Listings</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-card content-stack">
+      <div class="panel-header">
+        <div>
+          <h2 class="section-title">Available Listings</h2>
+          <p class="section-subtitle" id="browseSummary">Loading current rentals...</p>
+        </div>
+      </div>
+      <div id="browseRentalsGrid" class="property-grid"></div>
+    </section>
+  </main>
+
+  <script type="module" src="../js/authGuard.js"></script>
+  <script type="module" src="../js/modules/browseRentals.js"></script>
+  <script type="module" src="../components/navbar.js"></script>
+</body>
+</html>

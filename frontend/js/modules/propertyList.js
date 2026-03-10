@@ -28,7 +28,7 @@ import { formatCurrency, showToast } from "../utils/helpers.js";
   }
 
   if (isPropertyListPage && user.role === "tenant") {
-    window.location.href = "../pages/discover.html";
+    window.location.href = "../pages/browse-rentals.html";
     return;
   }
 
