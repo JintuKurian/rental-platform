@@ -186,6 +186,7 @@ export async function updateProperty(propertyId, payload) {
 }
 
 export async function deleteProperty(propertyId) {
+  // Delete images first
   const { error: imageDeleteError } = await supabaseClient
     .from("property_images")
     .delete()
@@ -195,14 +196,27 @@ export async function deleteProperty(propertyId) {
     return { error: imageDeleteError };
   }
 
-  const response = await supabaseClient.from("properties").delete().eq("property_id", propertyId);
+  // Delete property — use .select() so we can detect a silent RLS block.
+  // Supabase returns no error when RLS blocks DELETE, just 0 rows.
+  const { data: deleted, error: propError } = await supabaseClient
+    .from("properties")
+    .delete()
+    .eq("property_id", propertyId)
+    .select("property_id");
 
-  if (!response.error) {
-    localStorage.setItem("propertiesUpdatedAt", String(Date.now()));
+  if (propError) {
+    return { error: propError };
   }
 
-  return response;
+  if (!deleted || deleted.length === 0) {
+    // RLS silently blocked the delete (or ID doesn't exist)
+    return { error: new Error("Permission denied: you can only delete your own properties.") };
+  }
+
+  localStorage.setItem("propertiesUpdatedAt", String(Date.now()));
+  return { data: deleted, error: null };
 }
+
 
 export async function uploadPropertyImage(file, propertyId) {
   const extension = file.name.split(".").pop();

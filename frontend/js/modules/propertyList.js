@@ -101,7 +101,11 @@ async function fetchProperties() {
   renderCards(data || []);
 }
 
+// Map of property_id → property object — used in handleDelete to show title in confirm dialog
+const propertyMap = new Map();
+
 function renderCards(properties) {
+  propertyMap.clear();
   if (!properties.length) {
     propertyCards.innerHTML = `
       <div class='empty-state card'>
@@ -115,7 +119,9 @@ function renderCards(properties) {
     return;
   }
 
+  propertyMap.clear();
   propertyCards.innerHTML = properties.map((property) => {
+    propertyMap.set(property.property_id, property);
     const imageUrl  = getPropertyThumbnail(property);
     const ownerName = property.owners?.users?.name || "Owner";
     const typeLabel = property.property_type || "";
@@ -159,12 +165,24 @@ function renderCards(properties) {
   }).join("");
 }
 
-async function handleDelete(propertyId) {
-  if (!confirm("Are you sure you want to delete this property?")) return;
+async function handleDelete(propertyId, btn) {
+  const property = propertyMap.get(propertyId);
+  const label    = property?.title ? `"${property.title}"` : "this property";
+
+  if (!confirm(`Delete ${label}?\nThis will also remove all uploaded images. This cannot be undone.`)) return;
+
+  // Disable button while deleting to prevent double-clicks
+  if (btn) { btn.disabled = true; btn.textContent = "Deleting…"; }
+
   const { error } = await deleteProperty(propertyId);
-  if (error) { showToast("Failed to delete property", "error"); return; }
-  showToast("Property deleted successfully", "success");
-  localStorage.setItem("propertiesUpdatedAt", String(Date.now()));
+
+  if (error) {
+    showToast(error.message || "Failed to delete property", "error");
+    if (btn) { btn.disabled = false; btn.textContent = "Delete"; }
+    return;
+  }
+
+  showToast(`${label} deleted successfully`, "success");
   fetchProperties();
 }
 
@@ -211,7 +229,8 @@ propertyCards.addEventListener("click", async (event) => {
   const propertyId = Number(target.dataset.id);
   if (!propertyId) return;
 
-  if (target.classList.contains("deleteBtn")) await handleDelete(propertyId);
+  if (target.classList.contains("deleteBtn")) await handleDelete(propertyId, target);
+
   if (target.classList.contains("editBtn"))   await handleEdit(propertyId);
 });
 
