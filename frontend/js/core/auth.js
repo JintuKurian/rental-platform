@@ -1,6 +1,7 @@
 import supabaseClient from "./supabaseClient.js";
 
 const SESSION_RETRY_DELAYS_MS = [0, 120, 250, 500];
+const STORED_SESSION_GRACE_MS = 15000;
 
 function getLoginPath() {
   return "/pages/login.html";
@@ -36,6 +37,7 @@ export function storeUserSession(authUser, appUser = null) {
       id: authUser.id,
       email: authUser.email || ""
     }));
+    localStorage.setItem("sessionBootstrapAt", String(Date.now()));
   }
 
   if (appUser) {
@@ -55,10 +57,18 @@ export function clearStoredUser() {
   localStorage.removeItem("name");
   localStorage.removeItem("userEmail");
   localStorage.removeItem("loggedInUser");
+  localStorage.removeItem("sessionBootstrapAt");
 }
 
 function shouldRetrySessionLookup() {
   return Boolean(getStoredUser() || getStoredAuthUser());
+}
+
+function hasFreshStoredSession() {
+  const raw = localStorage.getItem("sessionBootstrapAt");
+  const bootstrapAt = Number(raw || 0);
+  if (!bootstrapAt) return false;
+  return Date.now() - bootstrapAt <= STORED_SESSION_GRACE_MS;
 }
 
 function wait(ms) {
@@ -133,16 +143,36 @@ async function getUserWithProfileByEmail(email) {
 export async function syncStoredUserWithSession() {
   const { session, error } = await resolveSession({ retryIfStored: true });
 
+  if (session?.user?.email) {
+    return getUserWithProfileByEmail(session.user.email);
+  }
+
+  const storedUser = getStoredUser();
+  if (!error && storedUser && hasFreshStoredSession()) {
+    return storedUser;
+  }
+
   if (error || !session?.user?.email) {
     clearStoredUser();
     return null;
   }
 
-  return getUserWithProfileByEmail(session.user.email);
+  return null;
 }
 
 export async function requireUser(allowedRoles = []) {
   const { session, error } = await resolveSession({ retryIfStored: true });
+
+  if (!error && !session?.user?.email) {
+    const storedUser = getStoredUser();
+    if (storedUser && hasFreshStoredSession()) {
+      if (allowedRoles.length && !allowedRoles.includes(storedUser.role)) {
+        window.location.href = getIndexPath();
+        return null;
+      }
+      return storedUser;
+    }
+  }
 
   if (error || !session?.user?.email) {
     clearStoredUser();
@@ -190,6 +220,12 @@ export function watchAuthState(onChange) {
       : (await resolveSession({ retryIfStored: true })).session;
 
     if (!activeSession?.user?.email) {
+      const storedUser = getStoredUser();
+      if (storedUser && hasFreshStoredSession()) {
+        onChange(storedUser);
+        return;
+      }
+
       clearStoredUser();
       onChange(null);
       return;

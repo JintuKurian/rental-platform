@@ -1,5 +1,8 @@
 import { getStoredUser, syncStoredUserWithSession, watchAuthState } from "../js/core/auth.js";
 
+const navbarMarkupCache = new Map();
+let renderSequence = 0;
+
 function getBasePrefix() {
   const path = window.location.pathname;
   if (path.includes("/pages/") || path.includes("/dashboards/")) return "../";
@@ -53,6 +56,7 @@ async function renderNavbar(user) {
   const container = document.getElementById("dashboardNavbar");
   if (!container) return;
 
+  const currentRender = ++renderSequence;
   const role = user?.role;
   const navbarPath = getNavbarPath(role);
   if (!navbarPath) {
@@ -61,13 +65,29 @@ async function renderNavbar(user) {
   }
 
   const prefix = getBasePrefix();
-  const response = await fetch(`${prefix}${navbarPath}`);
-  if (!response.ok) {
+  const cacheKey = `${prefix}${navbarPath}`;
+
+  let markup = navbarMarkupCache.get(cacheKey);
+  if (!markup) {
+    const response = await fetch(cacheKey);
+    if (!response.ok) {
+      if (currentRender !== renderSequence) return;
+      container.innerHTML = "";
+      return;
+    }
+
+    markup = await response.text();
+    navbarMarkupCache.set(cacheKey, markup);
+  }
+
+  if (currentRender !== renderSequence) return;
+
+  if (!markup) {
     container.innerHTML = "";
     return;
   }
 
-  container.innerHTML = await response.text();
+  container.innerHTML = markup;
 
   container.querySelectorAll("[data-href]").forEach((node) => {
     const href = node.getAttribute("data-href");
