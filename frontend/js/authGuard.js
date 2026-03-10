@@ -5,30 +5,13 @@ const DASHBOARD_GUARDS = {
   "/dashboards/tenant.html": "tenant",
   "/dashboards/admin.html": "admin"
 };
-const GUEST_ONLY_PUBLIC_ROUTES = [
-  "/pages/discover.html",
-  "/pages/property-details.html"
-];
 
 function getDashboardRoleForPath(pathname) {
   const normalized = Object.keys(DASHBOARD_GUARDS).find((path) => pathname.endsWith(path));
   return normalized ? DASHBOARD_GUARDS[normalized] : null;
 }
 
-function isGuestOnlyPublicRoute(pathname) {
-  return GUEST_ONLY_PUBLIC_ROUTES.some((path) => pathname.endsWith(path));
-}
-
 function updatePublicAuthButtonsVisibility() {
-  if (isGuestOnlyPublicRoute(window.location.pathname)) {
-    const loginBtn = document.getElementById("loginBtn");
-    const signupBtn = document.getElementById("signupBtn");
-
-    if (loginBtn) loginBtn.style.display = "";
-    if (signupBtn) signupBtn.style.display = "";
-    return;
-  }
-
   const user = getStoredUser();
   const loginBtn = document.getElementById("loginBtn");
   const signupBtn = document.getElementById("signupBtn");
