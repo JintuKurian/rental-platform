@@ -1,12 +1,26 @@
 import { requireUser } from "../core/auth.js";
 import { listProperties, getPropertiesByOwnerUserId, deleteProperty, updateProperty, PROPERTY_IMAGE_PLACEHOLDER } from "../services/propertyService.js";
 import { formatCurrency, showToast } from "../utils/helpers.js";
+import supabaseClient from "../core/supabaseClient.js";
 
 // Wrap everything in an async IIFE so top-level `return` is legal
 (async () => {
 
 const user = await requireUser(["admin", "owner", "tenant"]);
-if (!user) return; // valid inside an async IIFE
+if (!user) return;
+
+// ── Resolve owner_id for the logged-in user (owner role only) ─
+// We compare against property.owner_id (FK integer) — more reliable than
+// the nested owners?.user_id from the join.
+let myOwnerId = null;
+if (user.role === "owner") {
+  const { data: ownerRow } = await supabaseClient
+    .from("owners")
+    .select("owner_id")
+    .eq("user_id", user.user_id)
+    .maybeSingle();
+  myOwnerId = ownerRow?.owner_id ?? null;
+}
 
 const cityFilter    = document.getElementById("cityFilter");
 const statusFilter  = document.getElementById("statusFilter");
@@ -39,11 +53,14 @@ function getRelevantDetails(property) {
 }
 
 function canEdit(property) {
-  return user.role === "owner" && Number(property.owners?.user_id) === Number(user.user_id);
+  if (user.role !== "owner") return false;
+  // Compare using the resolved owner_id (more reliable)
+  return myOwnerId != null && myOwnerId === property.owner_id;
 }
 
 function canDelete(property) {
-  return user.role === "owner" && Number(property.owners?.user_id) === Number(user.user_id);
+  if (user.role !== "owner") return false;
+  return myOwnerId != null && myOwnerId === property.owner_id;
 }
 
 async function fetchProperties() {
