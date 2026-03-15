@@ -154,7 +154,7 @@ cd rental-platform
 
 **Jeffy K Jose**
 B.Tech Computer Science & Engineering
-Mar Athanasius College of Engineering
+Mar Athanasius College of Engineering\
 **Jintu Kurian**
 B.Tech Computer Science & Engineering
 Mar Athanasius College of Engineering
