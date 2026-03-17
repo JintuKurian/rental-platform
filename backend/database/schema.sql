@@ -70,7 +70,16 @@ create table if not exists rental_agreements (
   deposit_amount numeric(12,2) not null default 0 check (deposit_amount >= 0),
   monthly_rent numeric(12,2) not null check (monthly_rent >= 0),
   police_verified boolean not null default false,
-  agreement_status text not null default 'Active' check (agreement_status in ('Active', 'Completed', 'Terminated')),
+  agreement_status text not null default 'Pending Owner Approval' check (
+    agreement_status in (
+      'Pending Owner Approval',
+      'Pending Tenant Approval',
+      'Active',
+      'Completed',
+      'Rejected',
+      'Terminated'
+    )
+  ),
   created_at timestamptz not null default now(),
   constraint agreement_date_check check (end_date >= start_date)
 );

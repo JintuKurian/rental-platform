@@ -22,6 +22,7 @@ const propertySelect = document.getElementById("propertyId");
 const tenantSelect = document.getElementById("tenantId");
 const agreementTableBody = document.getElementById("agreementTableBody");
 const agreementStatusInput = document.getElementById("agreementStatus");
+const createAgreementButton = adminForm?.querySelector("button[type='submit']");
 
 function canCreateAgreement() {
   return user.role === "admin";
@@ -29,6 +30,21 @@ function canCreateAgreement() {
 
 function normalizeStatus(value) {
   return String(value || "").trim().toUpperCase();
+}
+
+function getAgreementErrorMessage(error, fallbackMessage) {
+  const rawMessage = String(error?.message || "").trim();
+  if (!rawMessage) return fallbackMessage;
+
+  if (/agreement_status/i.test(rawMessage) || /check constraint/i.test(rawMessage)) {
+    return "Database agreement status rules are outdated. Run the latest agreement schema SQL first.";
+  }
+
+  if (/row-level security/i.test(rawMessage) || /permission/i.test(rawMessage)) {
+    return "Rental agreement permissions are missing in Supabase. Run the latest RLS SQL first.";
+  }
+
+  return rawMessage;
 }
 
 function getEditRequests() {
@@ -366,17 +382,34 @@ adminForm?.addEventListener("submit", async (event) => {
     return;
   }
 
-  const { error } = await createAgreement(payload);
-  if (error) {
-    console.error(error);
-    showToast("Failed to create agreement", "error");
+  if (payload.end_date < payload.start_date) {
+    showToast("End date must be on or after the start date.", "error");
     return;
   }
 
-  showToast("Agreement created. Waiting for owner approval.", "success");
-  adminForm.reset();
-  if (agreementStatusInput) agreementStatusInput.value = AGREEMENT_STATUS.pendingOwner;
-  await loadAgreementList();
+  if (createAgreementButton) {
+    createAgreementButton.disabled = true;
+    createAgreementButton.textContent = "Creating...";
+  }
+
+  try {
+    const { error } = await createAgreement(payload);
+    if (error) {
+      console.error(error);
+      showToast(getAgreementErrorMessage(error, "Failed to create agreement"), "error");
+      return;
+    }
+
+    showToast("Agreement created. Waiting for owner approval.", "success");
+    adminForm.reset();
+    if (agreementStatusInput) agreementStatusInput.value = AGREEMENT_STATUS.pendingOwner;
+    await loadAgreementList();
+  } finally {
+    if (createAgreementButton) {
+      createAgreementButton.disabled = false;
+      createAgreementButton.textContent = "Create Agreement";
+    }
+  }
 });
 
 await loadSelectOptions();
