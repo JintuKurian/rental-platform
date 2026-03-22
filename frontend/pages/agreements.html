@@ -7,60 +7,125 @@
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <style id="mobile-responsive">
+    /* ── Universal mobile responsiveness ── */
+
+    /* Tables: always scrollable, never squished */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background:
+        linear-gradient(to right, var(--surface) 30%, transparent),
+        linear-gradient(to left,  var(--surface) 30%, transparent) 100% 0,
+        radial-gradient(farthest-side at 0 50%, rgba(15,23,42,0.07), transparent),
+        radial-gradient(farthest-side at 100% 50%, rgba(15,23,42,0.07), transparent) 100% 0;
+      background-repeat: no-repeat;
+      background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%;
+      background-attachment: local, local, scroll, scroll;
+    }
+    .table-wrap table { min-width: 600px; }
+
+    @media (max-width: 600px) {
+      .page-shell  { margin-top: 0.75rem; margin-bottom: 1.5rem; }
+      .page-card   { padding: 1rem; }
+      .form-grid   { grid-template-columns: 1fr !important; }
+      .form-grid .full { grid-column: 1; }
+      .kpi-grid    { grid-template-columns: repeat(2, 1fr) !important; }
+      .dash-main   { padding: 0.85rem !important; }
+      .dash-section-head { padding: 0.85rem 1rem !important; }
+      .properties-grid,
+      .property-grid { grid-template-columns: 1fr !important; }
+      .profile-form-grid { grid-template-columns: 1fr !important; }
+      .dash-option-grid  { grid-template-columns: 1fr !important; }
+      .actions-row { flex-direction: column; }
+      .actions-row .btn { width: 100%; justify-content: center; }
+      .table-wrap th,
+      .table-wrap td { padding: 0.55rem 0.75rem; font-size: 0.82rem; }
+      .preview-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+      .preview-item img { width: 100%; height: 80px; }
+    }
+  </style>
 </head>
 <body class="app-body">
   <div class="utility-bar" id="dashboardNavbar"></div>
 
   <main class="page-shell content-stack">
-    <section class="page-card">
-      <h2 class="section-title">Rental Agreements</h2>
+
+    <!-- Page Header -->
+    <section class="page-card" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border:none;padding:2rem 2.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div>
+          <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:0.4rem">Rental Management</p>
+          <h1 style="font-size:clamp(1.4rem,2.5vw,1.9rem);color:#fff;margin:0 0 0.3rem;line-height:1.2">Rental Agreements</h1>
+          <p style="color:rgba(255,255,255,0.75);font-size:0.9rem;margin:0">Create, review, and manage all rental agreements on the platform.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius-md);padding:0.75rem 1.1rem">
+          <span style="font-size:1.4rem">📄</span>
+          <span style="font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.9)">Agreement Center</span>
+        </div>
+      </div>
     </section>
 
-    <form id="agreementForm" class="page-card">
-      <h3 class="section-title">Create Agreement</h3>
-      <div class="form-grid">
-      <div>
-        <label for="propertyId">Property</label>
-        <select id="propertyId" required></select>
+    <!-- Create Agreement Form (admin/owner only — hidden for tenants via JS) -->
+    <section class="page-card" id="agreementFormSection">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap">
+        <div>
+          <h2 class="section-title" style="margin-bottom:0.2rem">Create Agreement</h2>
+          <p class="section-subtitle" style="margin-bottom:0">Fill in the details below to initiate a new rental agreement.</p>
+        </div>
+        <span style="display:inline-flex;align-items:center;gap:0.4rem;background:#fef9c3;border:1px solid #fde047;border-radius:var(--radius-full);padding:0.25rem 0.75rem;font-size:0.72rem;font-weight:700;color:#854d0e;text-transform:uppercase;letter-spacing:0.06em">⏳ Pending Approval</span>
       </div>
-      <div>
-        <label for="tenantId">Tenant</label>
-        <select id="tenantId" required></select>
-      </div>
-      <div>
-        <label for="startDate">Start Date</label>
-        <input id="startDate" type="date" required />
-      </div>
-      <div>
-        <label for="endDate">End Date</label>
-        <input id="endDate" type="date" required />
-      </div>
-      <div>
-        <label for="depositAmount">Deposit</label>
-        <input id="depositAmount" type="text" inputmode="numeric" required />
-      </div>
-      <div>
-        <label for="monthlyRent">Monthly Rent</label>
-        <input id="monthlyRent" type="text" inputmode="numeric" required />
-      </div>
-      <div>
-        <div class="checkbox-inline"><input id="policeVerified" type="checkbox" /><label for="policeVerified">Police Verified</label></div>
-      </div>
-      <div>
-        <label for="agreementStatus">Status</label>
-        <select id="agreementStatus">
-          <option value="Active">Active</option>
-          <option value="Completed">Completed</option>
-          <option value="Terminated">Terminated</option>
-        </select>
-      </div>
-      <div class="full">
-        <button class="btn btn-primary" type="submit">Create Agreement</button>
-      </div>
-    </div>
-    </form>
 
+      <form id="agreementForm">
+        <div class="form-grid">
+          <div>
+            <label for="propertyId">Property</label>
+            <select id="propertyId" required></select>
+          </div>
+          <div>
+            <label for="tenantId">Tenant</label>
+            <select id="tenantId" required></select>
+          </div>
+          <div>
+            <label for="startDate">Start Date</label>
+            <input id="startDate" type="date" required />
+          </div>
+          <div>
+            <label for="endDate">End Date</label>
+            <input id="endDate" type="date" required />
+          </div>
+          <div>
+            <label for="monthlyRent">Monthly Rent (₹)</label>
+            <input id="monthlyRent" type="text" inputmode="numeric" readonly />
+            <p class="helper-text">Auto-filled from selected property.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="checkbox-inline" style="margin-bottom:0.5rem">
+              <input id="policeVerified" type="checkbox" />
+              <label for="policeVerified">Police Verified</label>
+            </div>
+          </div>
+          <div class="full">
+            <label for="agreementStatus">Status</label>
+            <input id="agreementStatus" type="text" value="Pending Owner Approval" readonly />
+            <p class="helper-text">Admin creates the request → Owner sets deposit during approval → Agreement activates after both owner and tenant approve.</p>
+          </div>
+          <div class="full actions-row" style="margin-top:0.25rem">
+            <button class="btn btn-primary" type="submit">📄 Create Agreement</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Agreements Table -->
     <section class="page-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.1rem;flex-wrap:wrap">
+        <div>
+          <h2 class="section-title" style="margin-bottom:0.2rem">All Agreements</h2>
+          <p class="section-subtitle" style="margin-bottom:0">Overview of all rental agreements and their current status.</p>
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -68,6 +133,7 @@
               <th>ID</th>
               <th>Property</th>
               <th>Tenant</th>
+              <th>Contact</th>
               <th>Duration</th>
               <th>Rent</th>
               <th>Status</th>
@@ -78,6 +144,7 @@
         </table>
       </div>
     </section>
+
   </main>
 
   <script type="module" src="../js/authGuard.js"></script>

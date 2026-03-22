@@ -5,70 +5,232 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tenant Dashboard | NestFinder</title>
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
+  <link rel="preload" href="/assets/css/style.css" as="style">
+  <link rel="preload" href="/assets/js/main.js" as="script">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
   <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <style>
+    .dash-layout { display: flex; flex-direction: column; min-height: 100vh; }
+    .dash-topbar { position: sticky; top: 0; z-index: 600; height: var(--nav-height); background: var(--surface); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 1.25rem; gap: 0.85rem; box-shadow: var(--shadow-xs); }
+    .dash-hamburger { width: 38px; height: 38px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; flex-shrink: 0; transition: background 0.15s, border-color 0.15s; }
+    .dash-hamburger:hover { background: var(--surface-soft); border-color: var(--line-strong); }
+    .dash-hamburger span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; transition: all 0.25s ease; transform-origin: center; }
+    .dash-hamburger.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .dash-hamburger.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .dash-hamburger.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .dash-topbar-brand { font-size: 1.05rem; font-weight: 800; color: var(--text); letter-spacing: -0.04em; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+    .dash-topbar-brand:hover { color: var(--primary); }
+    .dash-topbar-title { flex: 1; font-size: 0.875rem; color: var(--text-secondary); font-weight: 500; }
+    .dash-topbar-user { display: flex; align-items: center; gap: 0.65rem; margin-left: auto; }
+    .dash-topbar-avatar { width: 34px; height: 34px; border-radius: var(--radius-full); background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: default; }
+    .dash-overlay { position: fixed; inset: 0; z-index: 700; background: rgba(15,23,42,0.45); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+    .dash-overlay.is-open { opacity: 1; pointer-events: all; }
+    .dash-drawer { position: fixed; top: 0; left: 0; bottom: 0; z-index: 800; width: 260px; background: var(--surface); border-right: 1px solid var(--line); box-shadow: var(--shadow-lg); display: flex; flex-direction: column; transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; }
+    .dash-drawer.is-open { transform: translateX(0); }
+    .dash-drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.1rem; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    .dash-drawer-brand { font-size: 1rem; font-weight: 800; color: var(--text); letter-spacing: -0.04em; text-decoration: none; }
+    .dash-drawer-brand:hover { color: var(--primary); }
+    .dash-drawer-close { width: 30px; height: 30px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--text-secondary); transition: all 0.15s; }
+    .dash-drawer-close:hover { background: var(--surface-soft); color: var(--text); }
+    .dash-drawer-user { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.1rem; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    .dash-drawer-avatar { width: 38px; height: 38px; border-radius: var(--radius-full); background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .dash-drawer-username { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+    .dash-drawer-role { font-size: 0.75rem; color: var(--text-secondary); }
+    .dash-drawer-nav { flex: 1; padding: 0.85rem 0.75rem; display: flex; flex-direction: column; gap: 0.15rem; }
+    .dash-nav-section-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-secondary); padding: 0.6rem 0.65rem 0.3rem; margin-top: 0.35rem; }
+    .dash-nav-link { display: flex; align-items: center; gap: 0.7rem; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; transition: all 0.15s; }
+    .dash-nav-link:hover { background: var(--surface-soft); color: var(--text); }
+    .dash-nav-link.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .dash-nav-icon { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
+    .dash-nav-divider { height: 1px; background: var(--line); margin: 0.5rem 0; }
+    .dash-main { background: var(--bg); padding: 1.5rem; display: grid; gap: 1.25rem; align-content: start; flex: 1; }
+    .dash-page-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .dash-page-header h1 { font-size: 1.35rem; margin-bottom: 0.2rem; }
+    .dash-page-header p { font-size: 0.875rem; color: var(--text-secondary); margin: 0; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .kpi-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 1.1rem 1.25rem; box-shadow: var(--shadow); display: grid; gap: 0.5rem; }
+    .kpi-card-head { display: flex; align-items: center; justify-content: space-between; }
+    .kpi-card-label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+    .kpi-card-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; }
+    .kpi-card-value { font-size: 1.75rem; font-weight: 800; color: var(--text); letter-spacing: -0.04em; line-height: 1; }
+    .kpi-card-sub { font-size: 0.78rem; color: var(--text-secondary); }
+    .kpi-card.payment-highlight { background: linear-gradient(135deg, var(--primary-light) 0%, #f5f3ff 100%); border-color: #c7d2fe; }
+    .kpi-card.payment-highlight .kpi-card-value { color: var(--primary); }
+    .dash-section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow); overflow: hidden; }
+    .dash-section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+    .dash-section-head h2 { font-size: 1rem; margin-bottom: 0.15rem; }
+    .dash-section-head p { font-size: 0.82rem; color: var(--text-secondary); margin: 0; }
+
+    /* ── Table fixes — scroll on mobile ── */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background:
+        linear-gradient(to right, var(--surface) 30%, rgba(255,255,255,0)),
+        linear-gradient(to left,  var(--surface) 30%, rgba(255,255,255,0)) 100% 0,
+        radial-gradient(farthest-side at 0 50%, rgba(15,23,42,0.08), transparent),
+        radial-gradient(farthest-side at 100% 50%, rgba(15,23,42,0.08), transparent) 100% 0;
+      background-repeat: no-repeat;
+      background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+      background-attachment: local, local, scroll, scroll;
+    }
+    .table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 520px; }
+    .table-wrap th, .table-wrap td { padding: 0.7rem 1rem; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: middle; }
+    .table-wrap th { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); background: var(--surface-soft); }
+    .table-wrap tr:last-child td { border-bottom: none; }
+    .table-wrap tr:hover td { background: var(--surface-soft); }
+
+    @media (max-width: 600px) {
+      .dash-main { padding: 0.85rem; 
+      /* Forms go single column */
+      .form-grid { grid-template-columns: 1fr !important; }
+      .form-grid .full { grid-column: 1; }
+
+      /* Property grid single column */
+      .properties-grid,
+      .property-grid { grid-template-columns: 1fr !important; }
+
+      /* Actions row stack */
+      .actions-row { flex-direction: column; }
+      .actions-row .btn { width: 100%; justify-content: center; }
+
+      /* Table tighter padding */
+      .table-wrap th,
+      .table-wrap td { padding: 0.55rem 0.75rem; font-size: 0.82rem; }
+
+      /* Page card padding */
+      .page-card { padding: 1rem; }
+    }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .dash-section-head { padding: 0.85rem 1rem; }
+    }
+  </style>
 </head>
 <body class="app-body">
-  <div class="utility-bar" id="dashboardNavbar"></div>
 
-  <main class="dashboard-layout dashboard-layout--full">
-    <section class="dashboard-shell">
+  <div class="dash-overlay" id="dashOverlay"></div>
 
-      <!-- ── Complete Profile Banner ── -->
-      <section id="tenantProfilePrompt" class="complete-profile-banner" hidden>
-        <div class="cpb-icon">👤</div>
-        <div class="cpb-body">
-          <h3 class="cpb-title">Complete your profile</h3>
-          <p class="cpb-desc">Add your phone number and city to browse and rent properties.</p>
+  <nav class="dash-drawer" id="dashDrawer">
+    <div class="dash-drawer-header">
+      <a class="dash-drawer-brand" href="../index.html">NestFinder</a>
+      <button class="dash-drawer-close" id="drawerClose" aria-label="Close menu">✕</button>
+    </div>
+    <div class="dash-drawer-user">
+      <div class="dash-drawer-avatar" id="drawerAvatar">?</div>
+      <div>
+        <div class="dash-drawer-username" id="drawerName">—</div>
+        <div class="dash-drawer-role">Tenant</div>
+      </div>
+    </div>
+    <div class="dash-drawer-nav">
+      <div class="dash-nav-section-label">Main</div>
+      <a class="dash-nav-link active" href="../dashboards/tenant.html"><span class="dash-nav-icon">📊</span> Dashboard</a>
+      <a class="dash-nav-link" href="../pages/browse-rentals.html"><span class="dash-nav-icon">🔎</span> Browse Rentals</a>
+      <div class="dash-nav-divider"></div>
+      <div class="dash-nav-section-label">My Rental</div>
+      <a class="dash-nav-link" href="../pages/agreements.html"><span class="dash-nav-icon">📄</span> Agreements</a>
+      <a class="dash-nav-link" href="../pages/payments.html"><span class="dash-nav-icon">💳</span> Payments</a>
+      <a class="dash-nav-link" href="../pages/maintenance.html"><span class="dash-nav-icon">🔧</span> Maintenance</a>
+      <div class="dash-nav-divider"></div>
+      <div class="dash-nav-section-label">Account</div>
+      <a class="dash-nav-link" href="../pages/profile.html"><span class="dash-nav-icon">👤</span> Profile</a>
+    </div>
+    <!-- No footer logout — logout lives on the Profile page -->
+  </nav>
+
+  <div class="dash-layout">
+    <header class="dash-topbar">
+      <button class="dash-hamburger" id="dashHamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <a class="dash-topbar-brand" href="../index.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#4f46e5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        NestFinder
+      </a>
+      <span class="dash-topbar-title">Tenant Dashboard</span>
+      <!-- Removed: name text. Only avatar remains. -->
+      <div class="dash-topbar-user">
+        <div class="dash-topbar-avatar" id="topbarAvatar" title="">?</div>
+      </div>
+    </header>
+
+    <main class="dash-main">
+      <div class="dash-page-header">
+        <div><h1>Overview</h1><p>Track your rental, payments, and maintenance requests.</p></div>
+        <a class="btn btn-primary btn-sm" href="../pages/browse-rentals.html">Browse Rentals</a>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card-head"><span class="kpi-card-label">Active Rental</span><div class="kpi-card-icon" style="background:#dcfce7">🏠</div></div>
+          <div class="kpi-card-value" id="tenantActiveRental">—</div>
+          <div class="kpi-card-sub">Current tenancy</div>
         </div>
-        <button class="btn btn-primary cpb-btn" type="button" id="openCompleteProfileBtn">
-          Complete Profile
-        </button>
-      </section>
-
-      <!-- ── Complete Profile Form ── -->
-      <section id="completeProfileForm" class="page-card" hidden>
-        <div class="cpf-head">
-          <div>
-            <h3 class="section-title">Complete your profile</h3>
-            <p class="section-subtitle">This is a one-time setup. You can update details later from the Profile page.</p>
+        <div class="kpi-card payment-highlight">
+          <div class="kpi-card-head"><span class="kpi-card-label">Upcoming Payment</span><div class="kpi-card-icon" style="background:#e0e7ff">💳</div></div>
+          <div class="kpi-card-value" id="tenantUpcomingPayment">—</div>
+          <div class="kpi-card-sub" id="tenantUpcomingPaymentMeta">No payment due yet.</div>
+          <div style="margin-top:0.5rem">
+            <a class="btn btn-primary btn-sm" id="tenantPayNowBtn" href="../pages/payments.html" hidden>Pay Now</a>
           </div>
-          <button class="btn btn-ghost cpf-close" type="button" id="closeCompleteProfileBtn">✕</button>
         </div>
-        <form id="tenantCompleteForm" class="form-grid" style="margin-top:1rem">
-          <div>
-            <label for="tenantPhone">Phone Number</label>
-            <input type="tel" id="tenantPhone" placeholder="+91 00000 00000" required />
-          </div>
-          <div>
-            <label for="tenantCity">City</label>
-            <input type="text" id="tenantCity" placeholder="e.g. Bangalore" required />
-          </div>
-          <div class="full actions-row" style="margin-top:0">
-            <button class="btn btn-primary" type="submit" id="saveTenantProfileBtn">Save &amp; Continue</button>
-            <button class="btn btn-secondary" type="button" id="cancelCompleteProfileBtn">Cancel</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- ── KPI Stats ── -->
-      <section class="page-card">
-        <h1 class="section-title">Tenant Dashboard</h1>
-        <div class="kpi-grid">
-          <article class="kpi-card metric-card"><p class="kpi-label">Active Rental</p><p class="kpi-value" id="tenantActiveRental">0</p></article>
-          <article class="kpi-card metric-card"><p class="kpi-label">Upcoming Payment</p><p class="kpi-value" id="tenantUpcomingPayment">₹0</p></article>
-          <article class="kpi-card metric-card"><p class="kpi-label">Maintenance Requests</p><p class="kpi-value" id="tenantMaintenanceRequests">0</p></article>
-          <article class="kpi-card metric-card"><p class="kpi-label">Agreement Status</p><p class="kpi-value" id="tenantAgreementStatus">No Active Agreement</p></article>
-          <article class="kpi-card metric-card"><p class="kpi-label">Recent Notifications</p><p class="kpi-value" id="tenantRecentNotifications">0</p></article>
+        <div class="kpi-card">
+          <div class="kpi-card-head"><span class="kpi-card-label">Maintenance</span><div class="kpi-card-icon" style="background:#fee2e2">🔧</div></div>
+          <div class="kpi-card-value" id="tenantMaintenanceRequests">—</div>
+          <div class="kpi-card-sub">Open requests</div>
         </div>
-      </section>
+        <div class="kpi-card">
+          <div class="kpi-card-head"><span class="kpi-card-label">Agreement</span><div class="kpi-card-icon" style="background:#fef9c3">📄</div></div>
+          <div class="kpi-card-value" style="font-size:1rem;padding-top:0.25rem" id="tenantAgreementStatus">—</div>
+          <div class="kpi-card-sub">Current status</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-head"><span class="kpi-card-label">Interests</span><div class="kpi-card-icon" style="background:#f3e8ff">🔔</div></div>
+          <div class="kpi-card-value" id="tenantRecentNotifications">—</div>
+          <div class="kpi-card-sub">Property requests</div>
+        </div>
+      </div>
 
-    </section>
-  </main>
+      <div class="dash-section">
+        <div class="dash-section-head">
+          <div><h2>My Property Interests</h2><p>Track listings you've requested and their current status.</p></div>
+          <a class="btn btn-secondary btn-sm" href="../pages/browse-rentals.html">Browse More</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Property</th><th>Owner</th><th>Status</th><th>Requested On</th></tr></thead>
+            <tbody id="tenantApplicationsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
 
   <script type="module" src="../js/authGuard.js"></script>
   <script type="module" src="../js/modules/tenant.js"></script>
   <script type="module" src="../components/navbar.js"></script>
+  <script src="/assets/js/main.js" defer></script>
+  <script type="module">
+    import { getStoredUser } from "../js/core/auth.js";
+    const user = getStoredUser();
+    if (user) {
+      const initials = user.name ? user.name.trim().split(/\s+/).map(w=>w[0]).join("").toUpperCase().slice(0,2) : "?";
+      ["topbarAvatar","drawerAvatar"].forEach(id => { const el = document.getElementById(id); if(el) { el.textContent = initials; el.title = user.name || user.email || ""; } });
+      const drawerNameEl = document.getElementById("drawerName");
+      if (drawerNameEl) drawerNameEl.textContent = user.name || user.email || "";
+    }
+    const hamburger = document.getElementById("dashHamburger");
+    const drawer    = document.getElementById("dashDrawer");
+    const overlay   = document.getElementById("dashOverlay");
+    const closeBtn  = document.getElementById("drawerClose");
+    function openDrawer()  { drawer.classList.add("is-open"); overlay.classList.add("is-open"); hamburger.classList.add("is-open"); hamburger.setAttribute("aria-expanded","true"); }
+    function closeDrawer() { drawer.classList.remove("is-open"); overlay.classList.remove("is-open"); hamburger.classList.remove("is-open"); hamburger.setAttribute("aria-expanded","false"); }
+    hamburger?.addEventListener("click", () => drawer.classList.contains("is-open") ? closeDrawer() : openDrawer());
+    closeBtn?.addEventListener("click", closeDrawer);
+    overlay?.addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", e => { if(e.key === "Escape") closeDrawer(); });
+  </script>
 </body>
 </html>

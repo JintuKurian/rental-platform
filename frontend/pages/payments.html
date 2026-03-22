@@ -7,58 +7,122 @@
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <style id="mobile-responsive">
+    /* ── Universal mobile responsiveness ── */
+
+    /* Tables: always scrollable, never squished */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background:
+        linear-gradient(to right, var(--surface) 30%, transparent),
+        linear-gradient(to left,  var(--surface) 30%, transparent) 100% 0,
+        radial-gradient(farthest-side at 0 50%, rgba(15,23,42,0.07), transparent),
+        radial-gradient(farthest-side at 100% 50%, rgba(15,23,42,0.07), transparent) 100% 0;
+      background-repeat: no-repeat;
+      background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%;
+      background-attachment: local, local, scroll, scroll;
+    }
+    .table-wrap table { min-width: 600px; }
+
+    @media (max-width: 600px) {
+      .page-shell  { margin-top: 0.75rem; margin-bottom: 1.5rem; }
+      .page-card   { padding: 1rem; }
+      .form-grid   { grid-template-columns: 1fr !important; }
+      .form-grid .full { grid-column: 1; }
+      .kpi-grid    { grid-template-columns: repeat(2, 1fr) !important; }
+      .dash-main   { padding: 0.85rem !important; }
+      .dash-section-head { padding: 0.85rem 1rem !important; }
+      .properties-grid,
+      .property-grid { grid-template-columns: 1fr !important; }
+      .profile-form-grid { grid-template-columns: 1fr !important; }
+      .dash-option-grid  { grid-template-columns: 1fr !important; }
+      .actions-row { flex-direction: column; }
+      .actions-row .btn { width: 100%; justify-content: center; }
+      .table-wrap th,
+      .table-wrap td { padding: 0.55rem 0.75rem; font-size: 0.82rem; }
+      .preview-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+      .preview-item img { width: 100%; height: 80px; }
+    }
+  </style>
 </head>
 <body class="app-body">
   <div class="utility-bar" id="dashboardNavbar"></div>
 
   <main class="page-shell content-stack">
-    <section class="page-card">
-      <h2 class="section-title">Rent Payments</h2>
+
+    <!-- Page Header -->
+    <section class="page-card" style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);border:none;padding:2rem 2.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div>
+          <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:0.4rem">Financial Tracking</p>
+          <h1 style="font-size:clamp(1.4rem,2.5vw,1.9rem);color:#fff;margin:0 0 0.3rem;line-height:1.2">Rent Payments</h1>
+          <p style="color:rgba(255,255,255,0.75);font-size:0.9rem;margin:0">Record, track, and confirm all rent payments across your agreements.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius-md);padding:0.75rem 1.1rem">
+          <span style="font-size:1.4rem">💳</span>
+          <span style="font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.9)">Payment Center</span>
+        </div>
+      </div>
     </section>
 
-    <form id="paymentForm" class="page-card">
-      <h3 class="section-title">Record Payment</h3>
-      <div class="form-grid">
-      <div>
-        <label for="agreementId">Agreement</label>
-        <select id="agreementId" required></select>
-      </div>
-      <div>
-        <label for="paymentMonth">Payment Month</label>
-        <input id="paymentMonth" type="month" required />
-      </div>
-      <div>
-        <label for="amountPaid">Amount Paid</label>
-        <input id="amountPaid" type="text" inputmode="numeric" required />
-      </div>
-      <div>
-        <label for="paymentDate">Payment Date</label>
-        <input id="paymentDate" type="date" required />
-      </div>
-      <div>
-        <label for="paymentMode">Mode</label>
-        <select id="paymentMode">
-          <option value="UPI">UPI</option>
-          <option value="Card">Card</option>
-          <option value="Bank Transfer">Bank Transfer</option>
-          <option value="Cash">Cash</option>
-        </select>
-      </div>
-      <div>
-        <label for="paymentStatus">Status</label>
-        <select id="paymentStatus">
-          <option value="Paid">Paid</option>
-          <option value="Pending">Pending</option>
-          <option value="Late">Late</option>
-        </select>
-      </div>
-      <div class="full">
-        <button class="btn btn-primary" type="submit">Record Payment</button>
-      </div>
-    </div>
-    </form>
-
+    <!-- Record Payment Form -->
     <section class="page-card">
+      <div style="margin-bottom:1.25rem">
+        <h2 class="section-title" id="paymentFormTitle" style="margin-bottom:0.2rem">Record Payment</h2>
+        <p class="section-subtitle" id="paymentFormSubtitle" style="margin-bottom:0">Log a rent payment against an active agreement.</p>
+      </div>
+
+      <form id="paymentForm">
+        <div class="form-grid">
+          <div>
+            <label for="agreementId">Agreement</label>
+            <select id="agreementId" required></select>
+          </div>
+          <div>
+            <label for="paymentMonth">Payment Month</label>
+            <input id="paymentMonth" type="month" required />
+          </div>
+          <div>
+            <label for="amountPaid">Amount Paid (₹)</label>
+            <input id="amountPaid" type="text" inputmode="numeric" placeholder="e.g. 15000" required />
+          </div>
+          <div>
+            <label for="paymentDate">Payment Date</label>
+            <input id="paymentDate" type="date" required />
+          </div>
+          <div>
+            <label for="paymentMode">Payment Mode</label>
+            <select id="paymentMode">
+              <option value="UPI">UPI</option>
+              <option value="Card">Card</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </div>
+          <div id="paymentStatusField">
+            <label for="paymentStatus">Status</label>
+            <select id="paymentStatus">
+              <option value="Confirmed">Confirmed</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Pending">Pending</option>
+              <option value="Late">Late</option>
+            </select>
+          </div>
+          <div class="full actions-row" style="margin-top:0.25rem">
+            <button class="btn btn-primary" id="paymentSubmitBtn" type="submit">💳 Record Payment</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Payments Table -->
+    <section class="page-card">
+      <div style="margin-bottom:1.1rem">
+        <h2 class="section-title" style="margin-bottom:0.2rem">Payment History</h2>
+        <p class="section-subtitle" style="margin-bottom:0">All recorded rent payments with their current confirmation status.</p>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -71,12 +135,14 @@
               <th>Date</th>
               <th>Mode</th>
               <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="paymentTableBody"></tbody>
         </table>
       </div>
     </section>
+
   </main>
 
   <script type="module" src="../js/authGuard.js"></script>

@@ -1,82 +1,320 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register | Rental Platform</title>
+  <title>Create Account | NestFinder</title>
+  <meta name="description" content="Create your NestFinder account and start managing or finding rentals." />
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="../css/global.css" />
-  <link rel="stylesheet" href="../css/forms.css" />
   <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
   <link rel="manifest" href="/assets/icons/site.webmanifest">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="preload" href="/assets/css/style.css" as="style">
   <link rel="preload" href="/assets/js/main.js" as="script">
-  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/forms.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: var(--bg);
+    }
+
+    /* ── Minimal top bar ── */
+    .auth-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+    }
+    .auth-topbar-brand {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.04em;
+      text-decoration: none;
+    }
+    .auth-topbar-brand:hover { color: var(--primary); }
+    .auth-topbar-links {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    .auth-topbar-links a {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .auth-topbar-links a:hover { color: var(--primary); }
+
+    /* ── Main centered layout ── */
+    .auth-center {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 60px);
+    }
+
+    /* ── Left decorative panel ── */
+    .auth-left {
+      background: linear-gradient(145deg, #4f46e5 0%, #7c3aed 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-left::before {
+      content: "";
+      position: absolute;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      top: -100px; right: -100px;
+    }
+    .auth-left::after {
+      content: "";
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      bottom: -80px; left: -80px;
+    }
+    .auth-left-content { position: relative; z-index: 1; }
+    .auth-left-logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.04em;
+      margin-bottom: 3rem;
+      display: block;
+    }
+    .auth-left h2 {
+      font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      letter-spacing: -0.03em;
+    }
+    .auth-left p {
+      color: rgba(255,255,255,0.75);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      max-width: 38ch;
+      margin-bottom: 2.5rem;
+    }
+    .auth-benefits {
+      display: grid;
+      gap: 0.85rem;
+    }
+    .auth-benefit {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: rgba(255,255,255,0.9);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .auth-benefit-icon {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Right form panel ── */
+    .auth-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: var(--surface);
+    }
+    .auth-form-wrap {
+      width: 100%;
+      max-width: 400px;
+    }
+    .auth-form-wrap h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.03em;
+    }
+    .auth-form-wrap .auth-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    .auth-form { display: grid; gap: 1.1rem; }
+    .auth-field { display: grid; gap: 0.4rem; }
+    .auth-field label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .auth-field input {
+      min-height: 46px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line-strong);
+      background: var(--surface);
+      padding: 0 0.95rem;
+      font-size: 0.92rem;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+      width: 100%;
+    }
+    .auth-field input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-ring);
+      background: var(--surface);
+      outline: none;
+    }
+    .auth-field input:hover:not(:focus) {
+      border-color: var(--primary);
+    }
+
+    .auth-submit {
+      margin-top: 0.5rem;
+      min-height: 46px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      width: 100%;
+    }
+
+    .auth-footer-text {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    .auth-footer-text a { font-weight: 600; color: var(--primary); }
+    .auth-footer-text a:hover { color: var(--primary-hover); }
+
+    .auth-note {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .auth-center { grid-template-columns: 1fr; }
+      .auth-left { display: none; }
+      .auth-right { min-height: calc(100vh - 60px); }
+      .auth-topbar { padding: 0 1rem; }
+    }
+  </style>
 </head>
 <body class="app-body auth-page">
-<header class="auth-topbar">
-  <a href="../index.html" class="app-brand">🏠 Rental Platform</a>
-  <nav>
-    <a href="../index.html">Home</a>
-    <a href="./about.html">About</a>
-    <a href="./discover.html">Discover</a>
-  </nav>
-</header>
-<main class="auth-shell">
-  <section class="auth-showcase">
-    <div class="auth-showcase-intro">
-      <p class="auth-kicker">All-in-one rental operations</p>
-      <h1>Grow your rental business with a clear, modern workflow.</h1>
-      <p class="auth-lead">Create your account and start managing listings, tenant journeys, and agreements in one reliable workspace.</p>
-    </div>
 
-    <div class="auth-features" aria-label="Platform highlights">
-      <article class="feature-item">
-        <span class="feature-icon" aria-hidden="true">🏘️</span>
-        <div>
-          <h3>Manage properties with confidence</h3>
-          <p>Property owners can list, update, and track rental performance in one dashboard.</p>
-        </div>
-      </article>
-      <article class="feature-item">
-        <span class="feature-icon" aria-hidden="true">🔎</span>
-        <div>
-          <h3>Help tenants find the right home</h3>
-          <p>Tenants can discover available homes, compare options, and move forward faster.</p>
-        </div>
-      </article>
-      <article class="feature-item">
-        <span class="feature-icon" aria-hidden="true">🔐</span>
-        <div>
-          <h3>Keep agreements and payments secure</h3>
-          <p>Centralized agreements and payment visibility make every step transparent.</p>
-        </div>
-      </article>
-    </div>
-  </section>
+  <!-- ── Minimal top bar ── -->
+  <header class="auth-topbar">
+    <a href="../index.html" class="auth-topbar-brand">NestFinder</a>
 
-  <section class="auth-card">
-    <div class="auth-brand">
-      <h2>Create account</h2>
-      <p>Only owner and tenant accounts can be self-registered. Admin accounts are provisioned manually.</p>
-    </div>
+  </header>
 
-    <form id="registerForm" class="auth-form">
-      <div><label for="name">Full Name</label><input type="text" id="name" required /></div>
-      <div><label for="email">Email</label><input type="email" id="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" required /></div>
-      <div><label for="password">Password</label><input type="password" id="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" required /></div>
-      <div>
-        <label for="role">Role</label>
-        <select id="role"><option value="tenant">Tenant</option><option value="owner">Owner</option></select>
+  <div class="auth-center">
+
+    <!-- ── Left panel ── -->
+    <div class="auth-left">
+      <div class="auth-left-content">
+        <span class="auth-left-logo">NestFinder</span>
+        <h2>Start your rental journey today.</h2>
+        <p>One account gives you access to listings, agreements, and payments — all in one place.</p>
+        <div class="auth-benefits">
+          <div class="auth-benefit">
+            <div class="auth-benefit-icon">🏘️</div>
+            <span>Browse and apply for verified rental properties</span>
+          </div>
+          <div class="auth-benefit">
+            <div class="auth-benefit-icon">📄</div>
+            <span>Sign and track rental agreements digitally</span>
+          </div>
+          <div class="auth-benefit">
+            <div class="auth-benefit-icon">💳</div>
+            <span>Pay and track rent securely from your dashboard</span>
+          </div>
+          <div class="auth-benefit">
+            <div class="auth-benefit-icon">🔔</div>
+            <span>Get notified on applications and approvals</span>
+          </div>
+        </div>
       </div>
-      <button class="btn btn-primary btn-block" type="submit">Register</button>
-    </form>
+    </div>
 
-    <p class="auth-links">Already registered? <a href="./login.html">Go to login</a></p>
-  </section>
-</main>
-<script type="module" src="../js/core/toast.js"></script>
-<script type="module" src="../js/modules/register.js"></script>
+    <!-- ── Right form panel ── -->
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <h1>Create your account</h1>
+        <p class="auth-subtitle">Join NestFinder — it's free and takes 30 seconds.</p>
+
+        <form id="registerForm" class="auth-form" novalidate>
+          <div class="auth-field">
+            <label for="name">Full name</label>
+            <input
+              type="text"
+              id="name"
+              autocomplete="name"
+              required
+            />
+          </div>
+          <div class="auth-field">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              autocomplete="email"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
+              inputmode="email"
+              required
+            />
+          </div>
+          <div class="auth-field">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              autocomplete="new-password"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
+              required
+            />
+          </div>
+          <button class="btn btn-primary auth-submit" type="submit">Create account</button>
+        </form>
+
+        <p class="auth-footer-text">
+          Already have an account? <a href="./login.html">Log in</a>
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module" src="../js/core/toast.js"></script>
+  <script type="module" src="../js/modules/register.js"></script>
   <script src="/assets/js/main.js" defer></script>
 </body>
 </html>

@@ -1,48 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Discover Rentals | Rental Platform</title>
+  <title>Discover Rentals | NestFinder</title>
+  <meta name="description" content="Search and discover rental properties by city, status, and budget." />
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
+  <style>
+    /* ── Discover-page skeleton loaders ── */
+    .skeleton {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-shimmer 1.4s infinite;
+      border-radius: var(--radius-sm);
+    }
+    @keyframes skeleton-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton-card {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+    .skeleton-img  { height: 180px; }
+    .skeleton-body { padding: 1rem; display: grid; gap: 0.5rem; }
+    .skeleton-line { height: 14px; border-radius: 4px; }
+    .skeleton-line.w-60 { width: 60%; }
+    .skeleton-line.w-40 { width: 40%; }
+
+    /* ── Results count bar ── */
+    .results-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+    .results-count {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .results-count strong { color: var(--text); }
+
+    /* ── Active filter chips ── */
+    .active-filters {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid #c7d2fe;
+      border-radius: var(--radius-full);
+      padding: 0.2rem 0.65rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .filter-tag-remove {
+      cursor: pointer;
+      font-size: 0.9rem;
+      line-height: 1;
+      opacity: 0.7;
+      background: none;
+      border: none;
+      color: inherit;
+      padding: 0;
+    }
+    .filter-tag-remove:hover { opacity: 1; }
+
+    /* ── Search results section hidden by default ── */
+    #searchResultsSection { display: none; }
+    #searchResultsSection.visible { display: block; }
+
+    /* ── Footer ── */
+    .site-footer {
+      width: var(--content-width);
+      margin: 0 auto 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 1.1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow);
+    }
+    .footer-links { display: flex; gap: 1.25rem; }
+    .footer-links a { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+    .footer-links a:hover { color: var(--primary); }
+    .site-footer p { font-size: 0.85rem; color: var(--text-secondary); margin: 0; }
+  </style>
 </head>
 <body class="app-body">
+
+  <!-- ── Sticky Nav ── -->
   <div class="utility-bar">
-    <nav class="landing-nav shell-panel">
-      <strong class="brand-mark">🏠 Rental Platform</strong>
-      <div class="landing-links">
+    <nav class="app-nav">
+      <a class="app-brand" href="../index.html">NestFinder</a>
+      <div class="app-links">
         <a href="../index.html">Home</a>
         <a href="../pages/about.html">About</a>
-        <a href="../pages/discover.html">Discover</a>
+        <a href="../pages/discover.html" class="active">Discover</a>
         <a href="../pages/terms.html">Terms</a>
       </div>
-      <div class="actions-row nav-actions">
-        <a id="loginBtn" class="btn btn-secondary" href="../pages/login.html">Login</a>
-        <a id="signupBtn" class="btn btn-primary" href="../pages/register.html">Sign up</a>
+      <div class="app-user-actions">
+        <a id="loginBtn"  class="btn btn-secondary btn-sm" href="../pages/login.html">Login</a>
+        <a id="signupBtn" class="btn btn-primary btn-sm"   href="../pages/register.html">Sign up</a>
       </div>
     </nav>
   </div>
 
   <main class="page-shell content-stack">
+
+    <!-- ── Page Header ── -->
     <section class="page-card">
-      <h1 class="section-title">Discover properties</h1>
-      <p class="section-subtitle">Search by city, status, and budget to see active listings.</p>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem">
+        <div>
+          <h1 class="section-title" style="font-size:clamp(1.3rem,2.5vw,1.75rem);margin-bottom:0.25rem">Discover properties</h1>
+          <p class="section-subtitle" style="margin-bottom:0">Filter by city, status, and budget to find your perfect rental.</p>
+        </div>
+        <button id="clearFiltersBtn" class="btn btn-ghost btn-sm" type="button" style="display:none">✕ Clear filters</button>
+      </div>
+
+      <!-- Filter grid -->
       <div class="search-bar shell-panel discover-filter-card">
         <div class="discover-filter-grid">
-          <div class="discover-filter-field"><label for="homeCity">City</label><input id="homeCity" type="text" placeholder="e.g. Nairobi" /></div>
-          <div class="discover-filter-field"><label for="homeStatus">Status</label><select id="homeStatus"><option value="">Any status</option><option value="Available">Available</option><option value="Rented">Rented</option></select></div>
-          <div class="discover-filter-field"><label for="homeBudget">Budget (Max)</label><input id="homeBudget" type="text" inputmode="numeric" /></div>
-          <div class="toolbar-action-wrap discover-filter-action"><button id="homeSearch" class="btn btn-primary" type="button">Search listings</button></div>
+          <div class="discover-filter-field">
+            <label for="homeCity">City</label>
+            <input id="homeCity" type="text" placeholder="e.g. Kochi, Bangalore…" autocomplete="off" />
+          </div>
+          <div class="discover-filter-field">
+            <label for="homeStatus">Status</label>
+            <select id="homeStatus">
+              <option value="">Any status</option>
+              <option value="Available">Available</option>
+              <option value="Rented">Rented</option>
+            </select>
+          </div>
+          <div class="discover-filter-field">
+            <label for="homeBudget">Max budget (₹)</label>
+            <input id="homeBudget" type="text" inputmode="numeric" placeholder="e.g. 20000" />
+          </div>
+          <div class="toolbar-action-wrap discover-filter-action">
+            <button id="homeSearch" class="btn btn-primary" type="button">Search listings</button>
+          </div>
         </div>
       </div>
     </section>
-    <section class="page-card"><h2 class="section-title">Recommended properties</h2><div id="recommendedGrid" class="property-grid"></div></section>
-    <section class="page-card"><h2 class="section-title">Newly added homes</h2><div id="newHomesGrid" class="property-grid"></div></section>
+
+    <!-- ── Search Results (shown only when filters active) ── -->
+    <section id="searchResultsSection" class="page-card">
+      <div class="results-bar">
+        <p class="results-count" id="resultsCount">Showing results</p>
+        <div class="active-filters" id="activeFilters"></div>
+      </div>
+      <div id="recommendedGrid" class="property-grid"></div>
+    </section>
+
+    <!-- ── All Available Listings ── -->
+    <section class="page-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:0.85rem;flex-wrap:wrap">
+        <div>
+          <h2 class="section-title" style="margin-bottom:0.2rem">All listings</h2>
+          <p class="section-subtitle" style="margin-bottom:0">Latest available properties, ordered by date added.</p>
+        </div>
+      </div>
+      <div id="newHomesGrid" class="property-grid">
+        <!-- Skeleton loaders while fetching -->
+        <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-body"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line w-60"></div><div class="skeleton skeleton-line w-40"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-body"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line w-60"></div><div class="skeleton skeleton-line w-40"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-body"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line w-60"></div><div class="skeleton skeleton-line w-40"></div></div></div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <p>© 2026 NestFinder · Transparent renting for everyone.</p>
+    <div class="footer-links">
+      <a href="../index.html">Home</a>
+      <a href="../pages/about.html">About</a>
+      <a href="../pages/terms.html">Terms</a>
+    </div>
+  </footer>
 
   <script type="module" src="../js/authGuard.js"></script>
   <script type="module" src="../js/modules/home.js"></script>
+  <script>
+    // ── Clear filters button ──
+    const clearBtn = document.getElementById("clearFiltersBtn");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        document.getElementById("homeCity").value = "";
+        document.getElementById("homeStatus").value = "";
+        document.getElementById("homeBudget").value = "";
+        document.getElementById("searchResultsSection").classList.remove("visible");
+        document.getElementById("activeFilters").innerHTML = "";
+        document.getElementById("resultsCount").textContent = "";
+        clearBtn.style.display = "none";
+        // Reload all listings without filters
+        document.getElementById("homeSearch").click();
+      });
+    }
+
+    // ── Show active filter tags & results count ──
+    document.getElementById("homeSearch")?.addEventListener("click", () => {
+      const city   = document.getElementById("homeCity")?.value.trim()  || "";
+      const status = document.getElementById("homeStatus")?.value        || "";
+      const budget = document.getElementById("homeBudget")?.value.trim() || "";
+      const hasFilters = city || status || budget;
+
+      const section = document.getElementById("searchResultsSection");
+      const tagsEl  = document.getElementById("activeFilters");
+      const clearB  = document.getElementById("clearFiltersBtn");
+
+      if (hasFilters) {
+        section.classList.add("visible");
+        clearB.style.display = "inline-flex";
+        const tags = [];
+        if (city)   tags.push(`📍 ${city}`);
+        if (status) tags.push(`🔖 ${status}`);
+        if (budget) tags.push(`💰 ≤ ₹${Number(budget).toLocaleString("en-IN")}`);
+        tagsEl.innerHTML = tags.map(t =>
+          `<span class="filter-tag">${t}</span>`
+        ).join("");
+      } else {
+        section.classList.remove("visible");
+        clearB.style.display = "none";
+        tagsEl.innerHTML = "";
+      }
+    });
+
+    // ── Update results count after home.js populates the grid ──
+    const observer = new MutationObserver(() => {
+      const grid  = document.getElementById("recommendedGrid");
+      const count = document.getElementById("resultsCount");
+      if (!grid || !count) return;
+      const cards = grid.querySelectorAll(".property-card");
+      count.innerHTML = cards.length
+        ? `Showing <strong>${cards.length}</strong> result${cards.length !== 1 ? "s" : ""}`
+        : "";
+    });
+    const grid = document.getElementById("recommendedGrid");
+    if (grid) observer.observe(grid, { childList: true });
+  </script>
 </body>
 </html>

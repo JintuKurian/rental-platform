@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Properties | NestFinder</title>
+  <title>Browse Rentals | NestFinder</title>
+  <meta name="description" content="Tenant workspace for browsing available rental listings." />
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
@@ -53,33 +54,50 @@
   <main class="page-shell content-stack">
 
     <!-- Page Header -->
-    <section class="page-card" style="background:linear-gradient(135deg,#3730a3 0%,#4f46e5 100%);border:none;padding:2rem 2.5rem;">
+    <section class="page-card" style="background:linear-gradient(135deg,#16a34a 0%,#0f766e 100%);border:none;padding:2rem 2.5rem;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
         <div>
-          <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:0.4rem">Admin View</p>
-          <h1 style="font-size:clamp(1.4rem,2.5vw,1.9rem);color:#fff;margin:0 0 0.3rem;line-height:1.2">Property Workspace</h1>
-          <p style="color:rgba(255,255,255,0.75);font-size:0.9rem;margin:0">Review every platform listing from one administrative view.</p>
+          <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:0.4rem">Tenant Workspace</p>
+          <h1 style="font-size:clamp(1.4rem,2.5vw,1.9rem);color:#fff;margin:0 0 0.3rem;line-height:1.2">Browse Rentals</h1>
+          <p style="color:rgba(255,255,255,0.75);font-size:0.9rem;margin:0">Review available rentals and send interest requests directly to owners.</p>
         </div>
         <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius-md);padding:0.75rem 1.1rem">
-          <span style="font-size:1.4rem">🏠</span>
-          <span style="font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.9)">All Listings</span>
+          <span style="font-size:1.4rem">🔎</span>
+          <span style="font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.9)">Available Listings</span>
         </div>
       </div>
     </section>
 
-    <!-- Properties Grid -->
+    <!-- Listings -->
     <section class="page-card">
-      <div style="margin-bottom:1.1rem">
-        <h2 class="section-title" style="margin-bottom:0.2rem">All Properties</h2>
-        <p class="section-subtitle" style="margin-bottom:0">Every listing on the platform. The public Discover page is the tenant-facing search surface.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.1rem;flex-wrap:wrap">
+        <div>
+          <h2 class="section-title" style="margin-bottom:0.2rem">Available Listings</h2>
+          <p class="section-subtitle" id="browseSummary" style="margin-bottom:0">Loading current rentals…</p>
+        </div>
       </div>
-      <div id="propertyCards" class="properties-grid"></div>
+      <div id="browseRentalsGrid" class="property-grid"></div>
     </section>
 
   </main>
 
+  <!-- Property Details Modal -->
+  <section id="tenantPropertyDetailsModal" class="workspace-modal" hidden>
+    <div class="workspace-modal__backdrop" data-close-tenant-modal="true"></div>
+    <div class="workspace-modal__panel page-card">
+      <div class="workspace-modal__head">
+        <div>
+          <h3 class="section-title">Property Details</h3>
+          <p class="section-subtitle">Review the listing without leaving your tenant workspace.</p>
+        </div>
+        <button class="btn btn-ghost" type="button" id="closeTenantPropertyModal">✕ Close</button>
+      </div>
+      <div id="tenantPropertyDetailsBody" class="content-stack"></div>
+    </div>
+  </section>
+
   <script type="module" src="../js/authGuard.js"></script>
-  <script type="module" src="../js/modules/propertyList.js"></script>
+  <script type="module" src="../js/modules/browseRentals.js"></script>
   <script type="module" src="../components/navbar.js"></script>
 </body>
 </html>

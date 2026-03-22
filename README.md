@@ -1,152 +1,226 @@
-# Rental Management Platform
+# NestFinder — Rental Management Platform
 
-A web-based rental management platform that connects **property owners** and **tenants**.
-The system allows users to list rental properties, search for available rentals, and manage listings through a simple dashboard.
+> A full-stack rental operations platform connecting property owners and tenants through a structured, transparent workflow — from discovery to signed agreement.
 
-🔗 **Live Website:**
-https://rental-platform-c40l.onrender.com
+🔗 **Live:** [rental-platform-c40l.onrender.com](https://rental-platform-c40l.onrender.com)
 
 ---
 
 ## Overview
 
-The Rental Management Platform is designed to simplify the process of listing and discovering rental properties. Owners can add and manage property listings, while tenants can browse and search for available rentals.
+NestFinder is a web-based rental management platform built as a **DBMS microproject**. It demonstrates real-world database design, role-based authentication, and full-stack integration using modern web technologies.
 
-This project was developed as a **DBMS microproject**, demonstrating database design, user authentication, and full-stack integration using modern web technologies.
+The platform supports three distinct roles — **Owners**, **Tenants**, and **Admins** — each with their own dashboard, workflows, and access controls.
 
 ---
 
 ## Features
 
-### User Authentication
+### 🔐 Authentication
+- Secure registration and login via Supabase Auth
+- Session management with local fallback for legacy accounts
+- Role-based dashboard routing after login
+- Flash messages for post-redirect feedback
 
-* Secure user registration and login
-* Role-based access (Owner / Tenant)
-* Session handling using Supabase authentication
+### 🏠 Owner
+- Add, edit, and manage rental property listings
+- Upload and manage property images
+- Review tenant interest requests
+- Shortlist, select, or reject applicants
+- Confirm rent payments submitted by tenants
+- Track monthly income, active agreements, and maintenance requests
 
-### Owner Features
+### 🔎 Tenant
+- Browse and filter available properties by city, budget, and type
+- Express interest in properties
+- Track application status (Interested → Shortlisted → Selected)
+- View and approve rental agreements
+- Submit rent payments with month tracking
+- Report and track maintenance issues
 
-* Add new rental property listings
-* Edit property details
-* Delete listings
-* Manage properties through a dashboard
+### 🛡️ Admin
+- Full platform oversight — all users, properties, agreements
+- View interest pipeline across all owners and tenants
+- Monitor active and pending agreements
+- Platform-wide KPI metrics
 
-### Tenant Features
-
-* Browse available rental properties
-* View property details
-* Search and filter listings
-
-### General Features
-
-* Responsive design for desktop and mobile
-* User-friendly interface
-* Toast notifications and alerts
-* Secure database operations with Row Level Security (RLS)
+### 🌐 Public
+- Browse available listings without an account
+- Filter by city and budget
+- View property details and owner information
 
 ---
 
 ## Tech Stack
 
-**Frontend**
-
-* HTML5
-* CSS3
-* Bootstrap
-* JavaScript (ES6)
-
-**Backend & Database**
-
-* Supabase (PostgreSQL database)
-* Supabase Authentication
-* Supabase Storage
-
-**Deployment**
-
-* Render (Frontend hosting)
+| Layer | Technology |
+|---|---|
+| Frontend | HTML5, CSS3, Vanilla JavaScript (ES6 Modules) |
+| Backend / Database | Supabase (PostgreSQL) |
+| Authentication | Supabase Auth |
+| File Storage | Supabase Storage |
+| Deployment | Render |
 
 ---
 
 ## Project Structure
 
 ```
-rental-platform
-│
-├── frontend
-│   ├── assets
-│   │   ├── css
-│   │   ├── js
-│   │   └── icons
-│   │
-│   ├── pages
-│   ├── index.html
-│
-├── backend
-│
-├── config
-│
-└── docs
+rental-platform/
+├── frontend/
+│   ├── assets/
+│   │   ├── css/                  # Global page loader styles
+│   │   ├── js/                   # Page loader + link prefetch script
+│   │   └── icons/                # Favicon and PWA icons
+│   ├── components/
+│   │   ├── navbar.js             # Dynamic role-based navbar loader
+│   │   └── navbars/
+│   │       ├── ownerNavbar.html
+│   │       ├── tenantNavbar.html
+│   │       └── adminNavbar.html
+│   ├── css/
+│   │   ├── global.css            # Design tokens, layout, components
+│   │   ├── forms.css             # Auth, forms, landing page styles
+│   │   └── dashboard.css        # Dashboard layout and KPI cards
+│   ├── dashboards/
+│   │   ├── owner.html
+│   │   ├── tenant.html
+│   │   └── admin.html
+│   ├── js/
+│   │   ├── authGuard.js          # Route protection
+│   │   ├── core/
+│   │   │   ├── auth.js           # Session management
+│   │   │   ├── supabaseClient.js # Supabase client init
+│   │   │   └── toast.js          # Toast notifications
+│   │   ├── modules/              # Page-specific logic
+│   │   ├── services/             # Supabase data access layer
+│   │   └── utils/                # Formatters and validators
+│   ├── pages/                    # All inner pages
+│   └── index.html                # Landing page
+├── backend/
+│   ├── database/
+│   │   ├── schema.sql            # 9-table database schema
+│   │   ├── seed.sql              # Sample data
+│   │   └── *.sql                 # Migration scripts and triggers
+│   └── policies/
+│       └── rls.sql               # Row Level Security policies
+├── config/
+│   └── settings.js               # Supabase project config
+└── docs/
+    ├── architecture.md
+    └── api-notes.md
 ```
 
 ---
 
-## Database Design
+## Database Schema
 
-The database contains the following core tables:
+The database consists of **9 tables** with enforced relationships and Row Level Security:
 
-* **users** – stores user account details
-* **owners** – stores owner-specific information
-* **tenants** – stores tenant-specific information
-* **properties** – stores rental property listings
+| Table | Description |
+|---|---|
+| `users` | Core user accounts (name, email, role, auth link) |
+| `owners` | Owner profile details |
+| `tenants` | Tenant profile details |
+| `properties` | Rental listings with type, city, rent, status |
+| `property_images` | Images linked to properties |
+| `applications` | Tenant interest requests and pipeline status |
+| `agreements` | Rental agreements between owner and tenant |
+| `payments` | Monthly rent payment records |
+| `maintenance_requests` | Tenant-reported issues per agreement |
 
-Relationships between tables ensure proper linking between users and their roles.
+### Key Triggers
+- **Prevent self-rental** — owners cannot apply to their own properties
+- **Profile completion restrictions** — certain actions require a completed profile
 
 ---
 
 ## How It Works
 
-1. Users register as either **Owner** or **Tenant**.
-2. Authentication is handled using **Supabase Auth**.
-3. Owners can add rental listings through the dashboard.
-4. Tenants can browse and search available properties.
-5. Data is securely stored and retrieved from the **Supabase PostgreSQL database**.
+```
+Register → Login → Select Dashboard (Owner / Tenant)
+                        │
+         ┌──────────────┴──────────────┐
+       Owner                        Tenant
+         │                             │
+   Add Property                  Browse Listings
+         │                             │
+   Review Interests              Express Interest
+         │                             │
+   Select Tenant            ← Owner Shortlists/Selects
+         │                             │
+   Admin creates Agreement    Tenant approves Agreement
+         │                             │
+   Track Payments  ←──────── Tenant submits Payment
+         │                             │
+   Confirm Payment            Report Maintenance
+```
 
 ---
 
-## Installation (Local Development)
+## Local Setup
 
-1. Clone the repository
+### Prerequisites
+- A [Supabase](https://supabase.com) project with the schema applied
+- A static file server (e.g. VS Code Live Server, or any HTTP server)
 
-```
+### Steps
+
+```bash
+# 1. Clone the repository
 git clone https://github.com/your-username/rental-platform.git
-```
-
-2. Navigate to the project directory
-
-```
 cd rental-platform
+
+# 2. Configure Supabase credentials
+# Edit config/settings.js with your Supabase URL and anon key
+
+# 3. Apply the database schema
+# Run backend/database/schema.sql in Supabase SQL Editor
+
+# 4. Apply RLS policies
+# Run backend/policies/rls.sql in Supabase SQL Editor
+
+# 5. (Optional) Seed sample data
+# Run backend/database/seed.sql
+
+# 6. Serve the frontend
+# Open frontend/index.html via a local server
 ```
 
-3. Configure Supabase credentials in the project configuration.
-
-4. Open the frontend in a browser or use a local development server.
+> **Note:** Open via a local server (not directly as a file) to ensure ES6 module imports work correctly.
 
 ---
 
 ## Security
 
-* Supabase **Row Level Security (RLS)** policies are used to protect user data.
-* Role-based access ensures that owners can only manage their own listings.
+- **Row Level Security (RLS)** — all Supabase tables have RLS policies ensuring users can only access their own data
+- **Auth guards** — protected pages redirect unauthenticated users to login
+- **Role enforcement** — server-side role checks prevent unauthorized dashboard access
+- **Input sanitisation** — HTML is escaped before rendering user-supplied content in tables
 
 ---
 
-## Future Improvements
+## Pages
 
-* Advanced search filters
-* Property image uploads
-* Booking or rental request system
-* Messaging between owners and tenants
-* Map integration for property locations
+| Page | Description |
+|---|---|
+| `/index.html` | Public landing page with live listings and location chips |
+| `/pages/discover.html` | Browse and filter all available properties |
+| `/pages/login.html` | User login |
+| `/pages/register.html` | New user registration |
+| `/pages/about.html` | Platform overview |
+| `/pages/terms.html` | Terms and conditions |
+| `/pages/add-property.html` | Owner: add a new listing |
+| `/pages/browse-rentals.html` | Tenant: browse and apply |
+| `/pages/agreements.html` | View and manage rental agreements |
+| `/pages/payments.html` | Submit and track rent payments |
+| `/pages/maintenance.html` | Report and track maintenance issues |
+| `/pages/profile.html` | View and edit user profile |
+| `/pages/property-list.html` | Admin: all platform properties |
+| `/pages/public-property.html` | Public property detail view |
+| `/dashboards/owner.html` | Owner dashboard |
+| `/dashboards/tenant.html` | Tenant dashboard |
+| `/dashboards/admin.html` | Admin dashboard |
 
 ---
 
@@ -159,10 +233,10 @@ Mar Athanasius College of Engineering\
 B.Tech Computer Science & Engineering
 Mar Athanasius College of Engineering
 
-Email: [jeffykjose10@gmail.com](mailto:jeffykjose10@gmail.com)
+📧 [jeffykjose10@gmail.com](mailto:jeffykjose10@gmail.com)
 
 ---
 
 ## License
 
-This project is developed for educational purposes as part of a **Database Management Systems (DBMS) microproject**.
+Developed for educational purposes as part of a **Database Management Systems (DBMS) microproject**.

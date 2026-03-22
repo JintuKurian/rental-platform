@@ -1,4 +1,7 @@
-import { getStoredUser, syncStoredUserWithSession } from "../js/core/auth.js";
+import { syncStoredUserWithSession, watchAuthState } from "../js/core/auth.js";
+
+const navbarMarkupCache = new Map();
+let renderSequence = 0;
 
 function getBasePrefix() {
   const path = window.location.pathname;
@@ -7,10 +10,14 @@ function getBasePrefix() {
 }
 
 function getNavbarPath(role) {
-  if (role === "owner")  return "components/navbars/ownerNavbar.html";
+  if (role === "owner") return "components/navbars/ownerNavbar.html";
   if (role === "tenant") return "components/navbars/tenantNavbar.html";
-  if (role === "admin")  return "components/navbars/adminNavbar.html";
+  if (role === "admin") return "components/navbars/adminNavbar.html";
   return null;
+}
+
+function getNavbarStorageKey(cacheKey) {
+  return `navbar:${cacheKey}`;
 }
 
 function getUserInitials(name) {
@@ -33,38 +40,67 @@ function markActiveLinks(root) {
 function populateUserChip(container, user) {
   if (!user) return;
   const avatarEl = container.querySelector("#navAvatar");
-  const nameEl   = container.querySelector("#navUserName");
+  const nameEl = container.querySelector("#navUserName");
   if (avatarEl) avatarEl.textContent = getUserInitials(user.name || user.email || "U");
-  if (nameEl)   nameEl.textContent   = user.name || user.email || "User";
+  if (nameEl) nameEl.textContent = user.name || user.email || "User";
 }
 
 function wireHamburger(container) {
   const toggle = container.querySelector("#navToggle");
-  const links  = container.querySelector("#appNavLinks");
+  const links = container.querySelector("#appNavLinks");
   if (!toggle || !links) return;
+
   toggle.addEventListener("click", () => {
     const isOpen = links.classList.toggle("nav-open");
-    toggle.textContent = isOpen ? "✕" : "☰";
+    toggle.textContent = isOpen ? "X" : "Menu";
     toggle.setAttribute("aria-expanded", String(isOpen));
   });
 }
 
-async function loadNavbar() {
+async function getNavbarMarkup(cacheKey) {
+  if (navbarMarkupCache.has(cacheKey)) {
+    return navbarMarkupCache.get(cacheKey);
+  }
+
+  const storedMarkup = sessionStorage.getItem(getNavbarStorageKey(cacheKey));
+  if (storedMarkup) {
+    navbarMarkupCache.set(cacheKey, storedMarkup);
+    return storedMarkup;
+  }
+
+  const response = await fetch(cacheKey);
+  if (!response.ok) {
+    return "";
+  }
+
+  const markup = await response.text();
+  navbarMarkupCache.set(cacheKey, markup);
+  sessionStorage.setItem(getNavbarStorageKey(cacheKey), markup);
+  return markup;
+}
+
+async function renderNavbar(user) {
   const container = document.getElementById("dashboardNavbar");
   if (!container) return;
 
-  await syncStoredUserWithSession();
-  const user = getStoredUser();
-  const role = user?.role;
-  const navbarPath = getNavbarPath(role);
-  if (!navbarPath) return;
+  const currentRender = ++renderSequence;
+  const navbarPath = getNavbarPath(user?.role);
+  if (!navbarPath) {
+    container.innerHTML = "";
+    return;
+  }
 
   const prefix = getBasePrefix();
-  const response = await fetch(`${prefix}${navbarPath}`);
-  if (!response.ok) return;
+  const cacheKey = `${prefix}${navbarPath}`;
+  const markup = await getNavbarMarkup(cacheKey);
 
-  container.innerHTML = await response.text();
+  if (currentRender !== renderSequence) return;
+  if (!markup) {
+    container.innerHTML = "";
+    return;
+  }
 
+  container.innerHTML = markup;
   container.querySelectorAll("[data-href]").forEach((node) => {
     const href = node.getAttribute("data-href");
     node.setAttribute("href", `${prefix}${href}`);
@@ -74,7 +110,15 @@ async function loadNavbar() {
   markActiveLinks(container);
   populateUserChip(container, user);
   wireHamburger(container);
-  // Footer intentionally NOT loaded on authenticated app pages
 }
+
+async function loadNavbar() {
+  const resolvedUser = await syncStoredUserWithSession();
+  await renderNavbar(resolvedUser || null);
+}
+
+watchAuthState((user) => {
+  void renderNavbar(user || null);
+});
 
 void loadNavbar();

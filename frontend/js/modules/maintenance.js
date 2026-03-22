@@ -4,11 +4,12 @@ import { createMaintenanceRequest, listMaintenanceRequests, updateMaintenanceReq
 import { formatCurrency, formatDate, showToast } from "../utils/helpers.js";
 
 const user = await requireUser(["admin", "owner", "tenant"]);
-if (!user) return;
+if (!user) throw new Error("Unauthorised");
 
 const requestForm = document.getElementById("requestForm");
 const agreementSelect = document.getElementById("agreementId");
 const requestTableBody = document.getElementById("requestTableBody");
+const requestMap = new Map();
 if (user.role !== "tenant") {
   requestForm.style.display = "none";
 }
@@ -23,7 +24,11 @@ async function loadAgreementOptionsForTenant() {
     return;
   }
 
-  const tenantAgreements = (data || []).filter((agreement) => agreement.tenants?.user_id === user.user_id);
+  const tenantAgreements = (data || []).filter((agreement) => {
+    const belongsToTenant = agreement.tenants?.user_id === user.user_id;
+    const isActive = String(agreement.agreement_status || "").trim().toLowerCase() === "active";
+    return belongsToTenant && isActive;
+  });
 
   agreementSelect.innerHTML = `<option value="">Select Agreement</option>${tenantAgreements
     .map(
@@ -42,6 +47,9 @@ function renderStatus(status) {
   }
   if (normalized.includes("progress")) {
     return `<span class="status-live"><span class="status-dot status-dot--progress"></span>In Progress</span>`;
+  }
+  if (normalized.includes("resolved")) {
+    return `<span class="status-live"><span class="status-dot status-dot--completed"></span>Resolved</span>`;
   }
   return `<span class="status-live"><span class="status-dot status-dot--completed"></span>${value}</span>`;
 }
@@ -63,6 +71,10 @@ async function loadMaintenanceList() {
   }
 
   const rows = filterByRole(data || []);
+  requestMap.clear();
+  rows.forEach((row) => {
+    requestMap.set(row.request_id, row);
+  });
 
   requestTableBody.innerHTML = rows.length
     ? rows
@@ -77,7 +89,11 @@ async function loadMaintenanceList() {
           <td>${formatDate(row.request_date)}</td>
           <td>${renderStatus(row.status)}</td>
           <td>${formatCurrency(row.cost_estimate)}</td>
-          <td>${user.role !== "tenant" ? `<button class="btn btn-secondary resolveBtn" data-id="${row.request_id}">Resolve</button>` : "-"}</td>
+          <td>${user.role !== "tenant"
+            ? String(row.status || "").trim().toLowerCase() === "resolved"
+              ? "<span class='helper-text'>Resolved</span>"
+              : `<button class="btn btn-secondary resolveBtn" data-id="${row.request_id}">Resolve</button>`
+            : "-"}</td>
         </tr>
       `
       )
@@ -122,10 +138,25 @@ requestTableBody.addEventListener("click", async (event) => {
   const id = Number(target.dataset.id);
   if (!id) return;
 
-  const cost = prompt("Enter final cost estimate");
+  const row = requestMap.get(id);
+  if (!row) {
+    showToast("Unable to load maintenance request", "error");
+    return;
+  }
+
+  const initialCost = row.cost_estimate != null ? String(row.cost_estimate) : "0";
+  const costInput = prompt("Enter final cost estimate", initialCost);
+  if (costInput === null) return;
+
+  const parsedCost = Number(costInput);
+  if (!Number.isFinite(parsedCost) || parsedCost < 0) {
+    showToast("Enter a valid final cost estimate", "error");
+    return;
+  }
+
   const { error } = await updateMaintenanceRequest(id, {
-    status: "Completed",
-    cost_estimate: Number(cost || 0)
+    status: "Resolved",
+    cost_estimate: parsedCost
   });
 
   if (error) {
@@ -134,7 +165,7 @@ requestTableBody.addEventListener("click", async (event) => {
     return;
   }
 
-  showToast("Maintenance request updated", "success");
+  showToast("Maintenance request marked as resolved", "success");
   loadMaintenanceList();
 });
 

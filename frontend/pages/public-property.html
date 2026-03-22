@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Properties | NestFinder</title>
+  <title>Property Details | NestFinder</title>
+  <meta name="description" content="View property details including photos, rent, specs, and owner contact." />
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
@@ -48,38 +49,35 @@
   </style>
 </head>
 <body class="app-body">
-  <div class="utility-bar" id="dashboardNavbar"></div>
+  <div class="utility-bar" id="dashboardNavbar" hidden></div>
+
+  <!-- Public nav -->
+  <header class="utility-bar" id="publicPropertyHeader">
+    <nav class="app-nav">
+      <a class="app-brand" href="../index.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        NestFinder
+      </a>
+      <div class="app-links">
+        <a href="../index.html">Home</a>
+        <a href="../pages/discover.html">Discover</a>
+      </div>
+      <div class="app-user-actions" id="detailsNavActions">
+        <a id="loginBtn" class="btn btn-secondary btn-sm" href="../pages/login.html">Login</a>
+        <a id="signupBtn" class="btn btn-primary btn-sm" href="../pages/register.html">Sign up</a>
+      </div>
+    </nav>
+  </header>
 
   <main class="page-shell content-stack">
-
-    <!-- Page Header -->
-    <section class="page-card" style="background:linear-gradient(135deg,#3730a3 0%,#4f46e5 100%);border:none;padding:2rem 2.5rem;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-        <div>
-          <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:0.4rem">Admin View</p>
-          <h1 style="font-size:clamp(1.4rem,2.5vw,1.9rem);color:#fff;margin:0 0 0.3rem;line-height:1.2">Property Workspace</h1>
-          <p style="color:rgba(255,255,255,0.75);font-size:0.9rem;margin:0">Review every platform listing from one administrative view.</p>
-        </div>
-        <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius-md);padding:0.75rem 1.1rem">
-          <span style="font-size:1.4rem">🏠</span>
-          <span style="font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.9)">All Listings</span>
-        </div>
-      </div>
+    <section id="propertyDetails" class="page-card">
+      <p class="section-subtitle">Loading property…</p>
     </section>
-
-    <!-- Properties Grid -->
-    <section class="page-card">
-      <div style="margin-bottom:1.1rem">
-        <h2 class="section-title" style="margin-bottom:0.2rem">All Properties</h2>
-        <p class="section-subtitle" style="margin-bottom:0">Every listing on the platform. The public Discover page is the tenant-facing search surface.</p>
-      </div>
-      <div id="propertyCards" class="properties-grid"></div>
-    </section>
-
   </main>
 
   <script type="module" src="../js/authGuard.js"></script>
-  <script type="module" src="../js/modules/propertyList.js"></script>
+  <script type="module" src="../js/core/toast.js"></script>
+  <script type="module" src="../js/modules/publicProperty.js"></script>
   <script type="module" src="../components/navbar.js"></script>
 </body>
 </html>

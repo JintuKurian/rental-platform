@@ -1,32 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>About | Rental Platform</title>
+  <title>About | NestFinder</title>
+  <meta name="description" content="Learn about NestFinder — a modern rental platform for owners, tenants, and property managers." />
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/assets/icons/site.webmanifest">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preload" href="/assets/css/style.css" as="style">
+  <link rel="preload" href="/assets/js/main.js" as="script">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
 </head>
 <body class="app-body">
+
+  <!-- ── Sticky Nav ── -->
   <div class="utility-bar">
-    <nav class="landing-nav shell-panel">
-      <strong class="brand-mark">🏠 Rental Platform</strong>
-      <div class="landing-links">
+    <nav class="app-nav">
+      <a class="app-brand" href="../index.html">NestFinder</a>
+      <div class="app-links">
         <a href="../index.html">Home</a>
-        <a href="../pages/about.html">About</a>
-        <a href="../pages/discover.html">Discover</a>
-        <a href="../pages/terms.html">Terms</a>
+        <a href="./about.html" class="active">About</a>
+        <a href="./discover.html">Discover</a>
+        <a href="./terms.html">Terms</a>
       </div>
-      <div class="actions-row nav-actions">
-        <a id="loginBtn" class="btn btn-secondary" href="../pages/login.html">Login</a>
-        <a id="signupBtn" class="btn btn-primary" href="../pages/register.html">Sign up</a>
+      <div class="app-user-actions">
+        <a class="btn btn-secondary btn-sm" href="./login.html">Login</a>
+        <a class="btn btn-primary btn-sm" href="./register.html">Sign up</a>
       </div>
     </nav>
   </div>
+
   <main class="page-shell content-stack">
-    <section class="page-card"><h1 class="section-title">About Rental Platform</h1><p class="section-subtitle">A professional rental operations product that keeps discovery, transactions, and account management structured and secure.</p></section>
+
+    <!-- ── Hero ── -->
+    <section class="page-card" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border:none;padding:3rem 2.5rem;">
+      <div style="max-width:60ch">
+        <p style="font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:0.75rem">About NestFinder</p>
+        <h1 style="font-size:clamp(1.8rem,3.5vw,2.8rem);color:#fff;line-height:1.15;margin-bottom:1rem">Built to make renting simpler for everyone.</h1>
+        <p style="color:rgba(255,255,255,0.8);font-size:1rem;line-height:1.75;margin:0">NestFinder is a rental operations platform that connects property owners and tenants through a structured, transparent workflow — from discovery to signed agreement.</p>
+      </div>
+    </section>
+
+    <!-- ── Mission ── -->
+    <section class="page-card">
+      <h2 class="section-title">Our mission</h2>
+      <p style="color:var(--text-secondary);line-height:1.8;font-size:0.95rem;max-width:72ch">
+        Renting a property — or managing one — shouldn't be stressful. NestFinder was built to eliminate the friction that comes with traditional rental processes: scattered paperwork, unclear payment trails, and poor communication between owners and tenants.
+        <br><br>
+        We believe every rental interaction should be transparent, documented, and easy to manage. Whether you're listing your first property or looking for your next home, NestFinder gives you the tools to do it with confidence.
+      </p>
+    </section>
+
+    <!-- ── Role highlights ── -->
+    <section class="page-card">
+      <h2 class="section-title" style="margin-bottom:0.25rem">Who is NestFinder for?</h2>
+      <p class="section-subtitle">Three distinct roles, one unified platform.</p>
+      <div class="role-highlight-grid">
+        <div class="role-highlight-card">
+          <div class="role-icon">🏠</div>
+          <h3 style="font-size:1rem;margin-bottom:0.3rem">Property Owners</h3>
+          <p>List and manage properties, review tenant applications, approve rental agreements, and track payments — all from one dashboard.</p>
+        </div>
+        <div class="role-highlight-card">
+          <div class="role-icon">🔎</div>
+          <h3 style="font-size:1rem;margin-bottom:0.3rem">Tenants</h3>
+          <p>Browse verified listings, apply for properties, sign agreements digitally, pay rent, and report maintenance issues effortlessly.</p>
+        </div>
+        <div class="role-highlight-card">
+          <div class="role-icon">🛡️</div>
+          <h3 style="font-size:1rem;margin-bottom:0.3rem">Administrators</h3>
+          <p>Full platform oversight — manage users, monitor agreements, review payments, and ensure platform integrity across all activity.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Features ── -->
+    <section class="page-card">
+      <h2 class="section-title" style="margin-bottom:0.25rem">What we offer</h2>
+      <p class="section-subtitle">Everything you need to run a smooth rental operation.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-top:0.5rem">
+        <div style="display:flex;gap:0.85rem;padding:1rem;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-soft)">
+          <span style="font-size:1.3rem;flex-shrink:0">✅</span>
+          <div>
+            <h4 style="margin-bottom:0.25rem;font-size:0.95rem">Verified listings</h4>
+            <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6">Every property is reviewed before going live. No fake or misleading listings.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.85rem;padding:1rem;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-soft)">
+          <span style="font-size:1.3rem;flex-shrink:0">📄</span>
+          <div>
+            <h4 style="margin-bottom:0.25rem;font-size:0.95rem">Digital agreements</h4>
+            <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6">Rental agreements are created, approved, and stored digitally — no paperwork needed.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.85rem;padding:1rem;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-soft)">
+          <span style="font-size:1.3rem;flex-shrink:0">💳</span>
+          <div>
+            <h4 style="margin-bottom:0.25rem;font-size:0.95rem">Payment tracking</h4>
+            <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6">Every rent payment is logged and visible to both owners and tenants in real time.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.85rem;padding:1rem;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-soft)">
+          <span style="font-size:1.3rem;flex-shrink:0">🔧</span>
+          <div>
+            <h4 style="margin-bottom:0.25rem;font-size:0.95rem">Maintenance requests</h4>
+            <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6">Tenants can report issues directly through the platform and track resolution status.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.85rem;padding:1rem;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-soft)">
+          <span style="font-size:1.3rem;flex-shrink:0">📍</span>
+          <div>
+            <h4 style="margin-bottom:0.25rem;font-size:0.95rem">Location-based search</h4>
+            <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6">Filter properties by city, budget, and type to find exactly what you're looking for.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.85rem;padding:1rem;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-soft)">
+          <span style="font-size:1.3rem;flex-shrink:0">🔒</span>
+          <div>
+            <h4 style="margin-bottom:0.25rem;font-size:0.95rem">Secure &amp; private</h4>
+            <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6">Role-based access ensures every user only sees what's relevant to them.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section class="page-card" style="display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap">
+      <div>
+        <h2 class="section-title" style="margin-bottom:0.25rem">Ready to get started?</h2>
+        <p class="section-subtitle" style="margin-bottom:0">Join NestFinder and experience a better way to rent.</p>
+      </div>
+      <div class="actions-row" style="margin-top:0">
+        <a class="btn btn-primary" href="./register.html">Create free account</a>
+        <a class="btn btn-secondary" href="./discover.html">Browse listings</a>
+      </div>
+    </section>
+
   </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer page-shell">
+    <p>© 2026 NestFinder · Transparent renting for everyone.</p>
+    <div style="display:flex;gap:1.25rem">
+      <a href="../index.html" style="font-size:0.85rem;color:var(--text-secondary);font-weight:500">Home</a>
+      <a href="./discover.html" style="font-size:0.85rem;color:var(--text-secondary);font-weight:500">Discover</a>
+      <a href="./terms.html" style="font-size:0.85rem;color:var(--text-secondary);font-weight:500">Terms</a>
+    </div>
+  </footer>
+
   <script type="module" src="../js/authGuard.js"></script>
+  <script src="/assets/js/main.js" defer></script>
 </body>
 </html>

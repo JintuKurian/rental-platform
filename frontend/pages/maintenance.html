@@ -7,45 +7,108 @@
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <style id="mobile-responsive">
+    /* ── Universal mobile responsiveness ── */
+
+    /* Tables: always scrollable, never squished */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background:
+        linear-gradient(to right, var(--surface) 30%, transparent),
+        linear-gradient(to left,  var(--surface) 30%, transparent) 100% 0,
+        radial-gradient(farthest-side at 0 50%, rgba(15,23,42,0.07), transparent),
+        radial-gradient(farthest-side at 100% 50%, rgba(15,23,42,0.07), transparent) 100% 0;
+      background-repeat: no-repeat;
+      background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%;
+      background-attachment: local, local, scroll, scroll;
+    }
+    .table-wrap table { min-width: 600px; }
+
+    @media (max-width: 600px) {
+      .page-shell  { margin-top: 0.75rem; margin-bottom: 1.5rem; }
+      .page-card   { padding: 1rem; }
+      .form-grid   { grid-template-columns: 1fr !important; }
+      .form-grid .full { grid-column: 1; }
+      .kpi-grid    { grid-template-columns: repeat(2, 1fr) !important; }
+      .dash-main   { padding: 0.85rem !important; }
+      .dash-section-head { padding: 0.85rem 1rem !important; }
+      .properties-grid,
+      .property-grid { grid-template-columns: 1fr !important; }
+      .profile-form-grid { grid-template-columns: 1fr !important; }
+      .dash-option-grid  { grid-template-columns: 1fr !important; }
+      .actions-row { flex-direction: column; }
+      .actions-row .btn { width: 100%; justify-content: center; }
+      .table-wrap th,
+      .table-wrap td { padding: 0.55rem 0.75rem; font-size: 0.82rem; }
+      .preview-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+      .preview-item img { width: 100%; height: 80px; }
+    }
+  </style>
 </head>
 <body class="app-body">
   <div class="utility-bar" id="dashboardNavbar"></div>
 
   <main class="page-shell content-stack">
-    <section class="page-card">
-      <h2 class="section-title">Maintenance Requests</h2>
+
+    <!-- Page Header -->
+    <section class="page-card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border:none;padding:2rem 2.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div>
+          <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:0.4rem">Property Management</p>
+          <h1 style="font-size:clamp(1.4rem,2.5vw,1.9rem);color:#fff;margin:0 0 0.3rem;line-height:1.2">Maintenance Requests</h1>
+          <p style="color:rgba(255,255,255,0.6);font-size:0.9rem;margin:0">Report issues, track repairs, and manage property maintenance.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-md);padding:0.75rem 1.1rem">
+          <span style="font-size:1.4rem">🔧</span>
+          <span style="font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.8)">Maintenance Center</span>
+        </div>
+      </div>
     </section>
 
-    <form id="requestForm" class="page-card">
-      <h3 class="section-title">Raise Request</h3>
-      <div class="form-grid">
-      <div>
-        <label for="agreementId">Agreement</label>
-        <select id="agreementId" required></select>
-      </div>
-      <div>
-        <label for="requestDate">Request Date</label>
-        <input id="requestDate" type="date" required />
-      </div>
-      <div>
-        <label for="issueType">Issue Type</label>
-        <input id="issueType" type="text" required />
-      </div>
-      <div>
-        <label for="costEstimate">Initial Cost Estimate</label>
-        <input id="costEstimate" type="text" inputmode="numeric" value="0" />
-      </div>
-      <div class="full">
-        <label for="description">Description</label>
-        <textarea id="description" rows="4" required></textarea>
-      </div>
-      <div class="full">
-        <button class="btn btn-primary" type="submit">Submit Request</button>
-      </div>
-    </div>
-    </form>
-
+    <!-- Raise Request Form -->
     <section class="page-card">
+      <div style="margin-bottom:1.25rem">
+        <h2 class="section-title" style="margin-bottom:0.2rem">Raise a Request</h2>
+        <p class="section-subtitle" style="margin-bottom:0">Describe the issue and we'll log it for your property owner to review.</p>
+      </div>
+
+      <form id="requestForm">
+        <div class="form-grid">
+          <div>
+            <label for="agreementId">Agreement</label>
+            <select id="agreementId" required></select>
+          </div>
+          <div>
+            <label for="requestDate">Request Date</label>
+            <input id="requestDate" type="date" required />
+          </div>
+          <div>
+            <label for="issueType">Issue Type</label>
+            <input id="issueType" type="text" placeholder="e.g. Plumbing, Electrical, Roof" required />
+          </div>
+          <div>
+            <label for="costEstimate">Initial Cost Estimate (₹)</label>
+            <input id="costEstimate" type="text" inputmode="numeric" value="0" />
+          </div>
+          <div class="full">
+            <label for="description">Description</label>
+            <textarea id="description" rows="4" placeholder="Describe the issue in detail…" required></textarea>
+          </div>
+          <div class="full actions-row" style="margin-top:0.25rem">
+            <button class="btn btn-primary" type="submit">🔧 Submit Request</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Requests Table -->
+    <section class="page-card">
+      <div style="margin-bottom:1.1rem">
+        <h2 class="section-title" style="margin-bottom:0.2rem">All Requests</h2>
+        <p class="section-subtitle" style="margin-bottom:0">Track the status of all submitted maintenance requests.</p>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -65,6 +128,7 @@
         </table>
       </div>
     </section>
+
   </main>
 
   <script type="module" src="../js/authGuard.js"></script>

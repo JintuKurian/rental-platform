@@ -1,195 +1,423 @@
 import { requireUser } from "../core/auth.js";
-import { listProperties, getPropertiesByOwnerUserId, deleteProperty, updateProperty, PROPERTY_IMAGE_PLACEHOLDER } from "../services/propertyService.js";
+import supabaseClient from "../core/supabaseClient.js";
+import {
+  deleteProperty,
+  getPropertiesByOwnerUserId,
+  listProperties,
+  PROPERTY_IMAGE_PLACEHOLDER,
+  updateProperty
+} from "../services/propertyService.js";
 import { formatCurrency, showToast } from "../utils/helpers.js";
 
-const user = await requireUser(["admin", "owner", "tenant"]);
-if (!user) return;
+(async () => {
+  const PROPERTY_ACTIVITY_KEY = "propertiesUpdatedAt";
+  const propertyCards = document.getElementById("propertyCards");
+  if (!propertyCards) return;
 
-const cityFilter = document.getElementById("cityFilter");
-const statusFilter = document.getElementById("statusFilter");
-const searchInput = document.getElementById("searchInput");
-const searchBtn = document.getElementById("searchBtn");
-const propertyCards = document.getElementById("propertyCards");
+  const currentPath = window.location.pathname;
+  const isPropertyListPage = currentPath.endsWith("/pages/property-list.html");
+  const isOwnerDashboard = currentPath.endsWith("/dashboards/owner.html");
+  const user = isOwnerDashboard
+    ? await requireUser(["owner"])
+    : await requireUser(["admin", "owner", "tenant"]);
 
-function getPropertyThumbnail(property) {
-  return property.property_images?.[0]?.image_url || PROPERTY_IMAGE_PLACEHOLDER;
-}
+  if (!user) return;
 
-function statusClass(status) {
-  const value = (status || "").toLowerCase();
-  if (value === "available") return "status-pill status-available";
-  if (value === "rented") return "status-pill status-rented";
-  return "status-pill status-inactive";
-}
-
-function getRelevantDetails(property) {
-  const type = (property.property_type || "").toLowerCase();
-
-  if (type === "apartment" || type === "house") {
-    return `Bedrooms: ${property.bedrooms || 0} · Bathrooms: ${property.bathrooms || 0} · Area: ${property.area_sqft || 0} sqft`;
+  if (isPropertyListPage && user.role === "owner") {
+    window.location.href = "../dashboards/owner.html#ownerPropertiesSection";
+    return;
   }
 
-  if (type === "studio") {
-    return `Bathrooms: ${property.bathrooms || 0} · Area: ${property.area_sqft || 0} sqft`;
+  if (isPropertyListPage && user.role === "tenant") {
+    window.location.href = "../pages/browse-rentals.html";
+    return;
   }
 
-  if (type === "office") {
-    return `Office Rooms: ${property.office_rooms || 0} · Area: ${property.area_sqft || 0} sqft`;
-  }
-
-  if (type === "shop" || type === "commercial") {
-    return `Shop Units: ${property.shop_units || 0} · Area: ${property.area_sqft || 0} sqft`;
-  }
-
-  return `Area: ${property.area_sqft || 0} sqft`;
-}
-
-
-// property_images are already joined via PROPERTY_SELECT_QUERY – no extra fetch needed
-
-function canEdit(property) {
-  return user.role === "owner" && Number(property.owners?.user_id) === Number(user.user_id);
-}
-
-function canDelete(property) {
-  return user.role === "owner" && Number(property.owners?.user_id) === Number(user.user_id);
-}
-
-async function fetchProperties() {
-  let data;
-  let error;
-
+  let myOwnerId = null;
   if (user.role === "owner") {
-    ({ data, error } = await getPropertiesByOwnerUserId(user.user_id, {
-      city: cityFilter.value.trim(),
-      status: statusFilter.value.trim(),
-      search: searchInput?.value.trim() || ""
-    }));
-  } else if (user.role === "tenant") {
-    ({ data, error } = await listProperties({ city: cityFilter.value.trim(), status: "Available" }));
-  } else {
-    ({ data, error } = await listProperties({ city: cityFilter.value.trim(), status: statusFilter.value.trim() }));
+    const { data: ownerRow } = await supabaseClient
+      .from("owners")
+      .select("owner_id")
+      .eq("user_id", user.user_id)
+      .maybeSingle();
+    myOwnerId = ownerRow?.owner_id ?? null;
   }
 
-  if (error) {
-    showToast("Failed to fetch properties", "error");
-    return;
+  const cityFilter = document.getElementById("cityFilter");
+  const statusFilter = document.getElementById("statusFilter");
+  const searchInput = document.getElementById("searchInput");
+  const budgetFilter = document.getElementById("budgetFilter");
+  const searchBtn = document.getElementById("searchBtn");
+
+  function removeLegacyFilterUi() {
+    const controls = [cityFilter, statusFilter, searchInput, budgetFilter, searchBtn].filter(Boolean);
+    const containers = new Set();
+
+    controls.forEach((control) => {
+      const wrapper = control.closest(".toolbar-item, .field, .form-field, .filter-field, .search-bar, .toolbar")
+        || control.parentElement;
+      if (wrapper) {
+        containers.add(wrapper);
+      } else {
+        control.remove();
+      }
+    });
+
+    containers.forEach((container) => {
+      if (!container || container.id === "propertyCards" || container.contains(propertyCards)) return;
+      container.remove();
+    });
   }
 
-  renderCards(data || []);
-}
+  removeLegacyFilterUi();
 
-function renderCards(properties) {
-  if (!properties.length) {
-    propertyCards.innerHTML = `
-      <div class='empty-state card'>
-        <h3>No properties found</h3>
-        <p>Adjust your filters or add a property to continue.</p>
-        ${user.role === "owner"
-    ? "<a class='btn btn-primary' href='./add-property.html'>Add Property</a>"
-    : "<button class='btn btn-primary' type='button' id='resetPropertyFilters'>Reset Filters</button>"}
-      </div>
-    `;
-    return;
+  const detailsModal = document.getElementById("ownerPropertyDetailsModal");
+  const detailsBody = document.getElementById("ownerPropertyDetailsBody");
+  const closeDetailsBtn = document.getElementById("closeOwnerPropertyModal");
+  const editModal = document.getElementById("ownerPropertyEditModal");
+  const editForm = document.getElementById("ownerEditPropertyForm");
+  const closeEditBtn = document.getElementById("closeOwnerEditModal");
+  const cancelEditBtn = document.getElementById("cancelOwnerEditBtn");
+  const saveEditBtn = document.getElementById("saveOwnerEditBtn");
+
+  const propertyMap = new Map();
+  let lastPropertyActivityStamp = localStorage.getItem(PROPERTY_ACTIVITY_KEY) || "";
+
+  function getPropertyThumbnail(property) {
+    return property.property_images?.[0]?.image_url || PROPERTY_IMAGE_PLACEHOLDER;
   }
 
-  propertyCards.innerHTML = properties.map((property) => {
-    const imageUrl = getPropertyThumbnail(property);
-    const ownerName = property.owners?.users?.name || "Owner";
+  function statusClass(status) {
+    const value = String(status || "").toLowerCase();
+    if (value === "available") return "status-pill status-available";
+    if (value === "reserved") return "status-pill status-pending";
+    if (value === "rented") return "status-pill status-rented";
+    return "status-pill status-inactive";
+  }
 
-    const ownerActions = `
-      <a class="btn btn-primary" href="./property-details.html?id=${property.property_id}">View</a>
-      ${canEdit(property) ? `<button class='btn btn-secondary editBtn' data-id='${property.property_id}'>Edit</button>` : ""}
-      ${canDelete(property) ? `<button class='btn btn-danger deleteBtn' data-id='${property.property_id}'>Delete</button>` : ""}
-    `;
+  function getRelevantDetails(property) {
+    const type = String(property.property_type || "").toLowerCase();
+    const parts = [];
 
-    const tenantActions = `
-      <a class="btn btn-primary" href="./property-details.html?id=${property.property_id}">View</a>
-      ${property.owners?.users?.email ? `<a class="btn btn-secondary" href="mailto:${property.owners.users.email}">Contact Owner</a>` : ""}
-    `;
+    if (property.bedrooms != null) parts.push(`${property.bedrooms} Bed`);
+    if (property.bathrooms != null) parts.push(`${property.bathrooms} Bath`);
+    if (property.office_rooms != null && type === "office") parts.push(`${property.office_rooms} Rooms`);
+    if (property.shop_units != null && ["shop", "commercial"].includes(type)) parts.push(`${property.shop_units} Units`);
+    if (property.area_sqft) parts.push(`${property.area_sqft} sqft`);
 
-    return `
-      <article class="property-card card">
-        <img class="property-img" src="${imageUrl}" alt="${property.title || "Property"}" onerror="this.src='${PROPERTY_IMAGE_PLACEHOLDER}'" />
-        <div class="property-body">
-          <h4>${property.title || "Untitled listing"}</h4>
-          <p class="property-meta">📍 ${property.city || "—"}</p>
-          <p><strong>Monthly Rent:</strong> ${formatCurrency(property.rent_amount)}</p>
-          <p><strong>Status:</strong> <span class="${statusClass(property.status)}">${property.status || "Unknown"}</span></p>
-          <p class="property-meta"><strong>Owner:</strong> ${ownerName}</p>
-          <p class="property-meta"><strong>Details:</strong> ${getRelevantDetails(property)}</p>
-          <div class="actions-row compact-actions">
-            ${user.role === "tenant" ? tenantActions : ownerActions}
+    return parts.length ? parts.join(" | ") : "Details not added yet";
+  }
+
+  function canManage(property) {
+    return user.role === "owner" && myOwnerId != null && myOwnerId === property.owner_id;
+  }
+
+  function buildDetailsUrl(propertyId, source) {
+    return `./public-property.html?id=${propertyId}&source=${encodeURIComponent(source)}`;
+  }
+
+  function openOwnerDetailsModal(property) {
+    if (!detailsModal || !detailsBody) return;
+
+    const image = getPropertyThumbnail(property);
+    const ownerName = property.owners?.users?.name || user.name || "Owner";
+
+    detailsBody.innerHTML = `
+      <div class="property-detail-grid">
+        <div class="content-stack">
+          <img class="property-detail-image" src="${image}" alt="${property.title || "Property"}" onerror="this.src='${PROPERTY_IMAGE_PLACEHOLDER}'" />
+          <div class="property-detail-specs">
+            <article class="property-detail-spec">
+              <strong>Type</strong>
+              <p>${property.property_type || "-"}</p>
+            </article>
+            <article class="property-detail-spec">
+              <strong>Status</strong>
+              <p><span class="${statusClass(property.status)}">${property.status || "Unknown"}</span></p>
+            </article>
+            <article class="property-detail-spec">
+              <strong>Area</strong>
+              <p>${property.area_sqft || "-"} sqft</p>
+            </article>
+            <article class="property-detail-spec">
+              <strong>Usage</strong>
+              <p>${property.allowed_usage || "-"}</p>
+            </article>
           </div>
         </div>
-      </article>
+        <div class="property-detail-meta">
+          <div class="callout">
+            <h3>${property.title || "Untitled listing"}</h3>
+            <p class="section-subtitle">${[property.address, property.city].filter(Boolean).join(", ") || "Address not available"}</p>
+            <p><strong>Rent:</strong> ${formatCurrency(property.rent_amount)}</p>
+            <p><strong>Owner:</strong> ${ownerName}</p>
+          </div>
+          <div class="callout">
+            <h4>Configuration</h4>
+            <p>${getRelevantDetails(property)}</p>
+          </div>
+        </div>
+      </div>
     `;
-  }).join("");
-}
 
-async function handleDelete(propertyId) {
-  if (!confirm("Are you sure you want to delete this property?")) return;
-  const { error } = await deleteProperty(propertyId);
-  if (error) {
-    showToast("Failed to delete property", "error");
-    return;
+    detailsModal.hidden = false;
   }
-  showToast("Property deleted successfully", "success");
-  localStorage.setItem("propertiesUpdatedAt", String(Date.now()));
-  fetchProperties();
-}
 
-async function handleEdit(propertyId) {
-  const newTitle = prompt("Enter updated property title:");
-  if (!newTitle) return;
-  const newCity = prompt("Enter updated city:");
-  if (!newCity) return;
-  const newRent = prompt("Enter updated monthly rent:");
-  if (!newRent) return;
+  function closeOwnerDetailsModal() {
+    if (detailsModal) detailsModal.hidden = true;
+  }
 
-  const { error } = await updateProperty(propertyId, {
-    title: newTitle.trim(),
-    city: newCity.trim(),
-    rent_amount: Number(newRent)
+  function openOwnerEditModal(property) {
+    if (!editModal || !editForm) return;
+
+    document.getElementById("editPropertyId").value = String(property.property_id);
+    document.getElementById("editPropertyTitle").value = property.title || "";
+    document.getElementById("editPropertyType").value = property.property_type || "";
+    document.getElementById("editPropertyAddress").value = property.address || "";
+    document.getElementById("editPropertyCity").value = property.city || "";
+    document.getElementById("editPropertyRent").value = String(property.rent_amount || "");
+    document.getElementById("editPropertyStatus").value = property.status || "Available";
+    document.getElementById("editPropertyArea").value = property.area_sqft || "";
+
+    editModal.hidden = false;
+  }
+
+  function closeOwnerEditModal() {
+    if (editModal) editModal.hidden = true;
+    editForm?.reset();
+  }
+
+  async function fetchProperties() {
+    let data;
+    let error;
+
+    if (user.role === "owner") {
+      ({ data, error } = await getPropertiesByOwnerUserId(user.user_id));
+    } else {
+      ({ data, error } = await listProperties());
+    }
+
+    if (error) {
+      showToast(error.message || "Failed to fetch properties", "error");
+      return;
+    }
+
+    renderCards(data || []);
+  }
+
+  async function refreshPropertiesIfChanged(force = false) {
+    const latestStamp = localStorage.getItem(PROPERTY_ACTIVITY_KEY) || "";
+    if (!force && latestStamp === lastPropertyActivityStamp) return;
+    lastPropertyActivityStamp = latestStamp;
+    await fetchProperties();
+  }
+
+  function renderCards(properties) {
+    propertyMap.clear();
+
+    if (!properties.length) {
+      propertyCards.innerHTML = `
+        <div class="empty-state card">
+          <h3>No properties found</h3>
+          <p>${user.role === "owner" ? "Add your first listing to start managing it here." : "Platform listings will appear here once owners publish them."}</p>
+          ${user.role === "owner"
+            ? "<a class='btn btn-primary' href='../pages/add-property.html'>Add Property</a>"
+            : ""}
+        </div>
+      `;
+      return;
+    }
+
+    propertyCards.innerHTML = properties.map((property) => {
+      propertyMap.set(property.property_id, property);
+      const imageUrl = getPropertyThumbnail(property);
+      const ownerName = property.owners?.users?.name || "Owner";
+      const source = isOwnerDashboard ? "owner-dashboard" : "property-list";
+
+      let actions = `
+        <a class="btn btn-primary" href="${buildDetailsUrl(property.property_id, source)}">View</a>
+      `;
+
+      if (canManage(property)) {
+        if (isOwnerDashboard) {
+          actions = `
+            <button class="btn btn-primary viewBtn" type="button" data-id="${property.property_id}">View</button>
+            <button class="btn btn-secondary editBtn" type="button" data-id="${property.property_id}">Edit</button>
+            <button class="btn btn-danger deleteBtn" type="button" data-id="${property.property_id}">Delete</button>
+          `;
+        } else {
+          actions = `
+            <a class="btn btn-primary" href="${buildDetailsUrl(property.property_id, "owner-dashboard")}">View</a>
+            <button class="btn btn-secondary editBtn" type="button" data-id="${property.property_id}">Edit</button>
+            <button class="btn btn-danger deleteBtn" type="button" data-id="${property.property_id}">Delete</button>
+          `;
+        }
+      }
+
+      return `
+        <article class="property-card card">
+          <div class="property-img-wrap">
+            <img class="property-img" src="${imageUrl}" alt="${property.title || "Property"}" onerror="this.src='${PROPERTY_IMAGE_PLACEHOLDER}'" />
+            ${property.property_type ? `<span class="property-type-badge">${property.property_type}</span>` : ""}
+          </div>
+          <div class="property-body">
+            <h4 class="property-title">${property.title || "Untitled listing"}</h4>
+            <p class="property-meta">Location: ${property.city || "-"}</p>
+            <p class="property-meta property-specs">${getRelevantDetails(property)}</p>
+            <p class="property-rent"><strong>${formatCurrency(property.rent_amount)}</strong> <span>/ month</span></p>
+            <p class="property-meta"><strong>Status:</strong> <span class="${statusClass(property.status)}">${property.status || "Unknown"}</span></p>
+            <p class="property-meta"><strong>Owner:</strong> ${ownerName}</p>
+            <div class="actions-row compact-actions">${actions}</div>
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  async function handleDelete(propertyId, button) {
+    const property = propertyMap.get(propertyId);
+    const label = property?.title ? `"${property.title}"` : "this property";
+
+    if (!window.confirm(`Delete ${label}?\nThis will remove the listing and related images.`)) return;
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Deleting...";
+    }
+
+    const { error } = await deleteProperty(propertyId);
+    if (error) {
+      showToast(error.message || "Failed to delete property", "error");
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Delete";
+      }
+      return;
+    }
+
+    localStorage.setItem("propertiesUpdatedAt", String(Date.now()));
+    showToast("Property deleted successfully", "success");
+    window.dispatchEvent(new CustomEvent("properties:changed"));
+    closeOwnerDetailsModal();
+    await fetchProperties();
+  }
+
+  window.addEventListener("properties:changed", () => {
+    lastPropertyActivityStamp = localStorage.getItem(PROPERTY_ACTIVITY_KEY) || String(Date.now());
+    void fetchProperties();
   });
 
-  if (error) {
-    showToast("Failed to update property", "error");
-    return;
-  }
-  showToast("Property updated successfully", "success");
-  fetchProperties();
-}
+  window.addEventListener("storage", (event) => {
+    if (event.key !== PROPERTY_ACTIVITY_KEY) return;
+    void refreshPropertiesIfChanged(true);
+  });
 
-searchBtn.addEventListener("click", fetchProperties);
-propertyCards.addEventListener("click", async (event) => {
-  const target = event.target;
-  if (!(target instanceof HTMLButtonElement)) return;
+  window.addEventListener("pageshow", () => {
+    void refreshPropertiesIfChanged(true);
+  });
 
-  if (target.id === "resetPropertyFilters") {
-    cityFilter.value = "";
-    statusFilter.value = "";
-    if (searchInput) searchInput.value = "";
-    fetchProperties();
-    return;
-  }
+  window.addEventListener("focus", () => {
+    void refreshPropertiesIfChanged();
+  });
 
-  const propertyId = Number(target.dataset.id);
-  if (!propertyId) return;
+  propertyCards.addEventListener("click", async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
 
-  if (target.classList.contains("deleteBtn")) await handleDelete(propertyId);
-  if (target.classList.contains("editBtn")) await handleEdit(propertyId);
-});
+    const button = target.closest("button");
+    if (!(button instanceof HTMLButtonElement)) return;
 
-fetchProperties();
+    const propertyId = Number(button.dataset.id);
+    if (!propertyId) return;
 
-if (user.role === "tenant") {
-  statusFilter.value = "Available";
-  statusFilter.disabled = true;
-}
+    const property = propertyMap.get(propertyId);
+    if (!property) return;
 
-window.addEventListener("storage", (event) => {
-  if (event.key === "propertiesUpdatedAt") {
-    fetchProperties();
-  }
-});
+    if (button.classList.contains("viewBtn")) {
+      openOwnerDetailsModal(property);
+      return;
+    }
+
+    if (button.classList.contains("editBtn")) {
+      openOwnerEditModal(property);
+      return;
+    }
+
+    if (button.classList.contains("deleteBtn")) {
+      await handleDelete(propertyId, button);
+    }
+  });
+
+  editForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const propertyId = Number(document.getElementById("editPropertyId").value);
+    if (!propertyId) {
+      showToast("Invalid property selected for edit", "error");
+      return;
+    }
+
+    const payload = {
+      title: document.getElementById("editPropertyTitle").value.trim(),
+      property_type: document.getElementById("editPropertyType").value.trim(),
+      address: document.getElementById("editPropertyAddress").value.trim(),
+      city: document.getElementById("editPropertyCity").value.trim(),
+      rent_amount: Number(document.getElementById("editPropertyRent").value || 0),
+      status: document.getElementById("editPropertyStatus").value,
+      area_sqft: Number(document.getElementById("editPropertyArea").value || 0) || null
+    };
+
+    if (!payload.title || !payload.property_type || !payload.address || !payload.city || payload.rent_amount < 0) {
+      showToast("Please fill valid property details before saving", "error");
+      return;
+    }
+
+    if (saveEditBtn) {
+      saveEditBtn.disabled = true;
+      saveEditBtn.textContent = "Saving...";
+    }
+
+    const { error } = await updateProperty(propertyId, payload);
+
+    if (saveEditBtn) {
+      saveEditBtn.disabled = false;
+      saveEditBtn.textContent = "Save Changes";
+    }
+
+    if (error) {
+      showToast(error.message || "Failed to update property", "error");
+      return;
+    }
+
+    localStorage.setItem("propertiesUpdatedAt", String(Date.now()));
+    window.dispatchEvent(new CustomEvent("properties:changed"));
+    showToast("Property updated successfully", "success");
+    closeOwnerEditModal();
+    await fetchProperties();
+  });
+
+  closeDetailsBtn?.addEventListener("click", closeOwnerDetailsModal);
+  closeEditBtn?.addEventListener("click", closeOwnerEditModal);
+  cancelEditBtn?.addEventListener("click", closeOwnerEditModal);
+
+  detailsModal?.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.dataset.closeOwnerModal === "true") closeOwnerDetailsModal();
+  });
+
+  editModal?.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.dataset.closeOwnerEdit === "true") closeOwnerEditModal();
+  });
+
+  window.addEventListener("storage", (event) => {
+    if (event.key === "propertiesUpdatedAt") {
+      fetchProperties();
+    }
+  });
+
+  await fetchProperties();
+})();
+

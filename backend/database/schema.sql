@@ -50,7 +50,7 @@ create table if not exists properties (
   shop_units integer,
   rent_amount numeric(12,2) not null check (rent_amount >= 0),
   allowed_usage text,
-  status text not null default 'Available' check (status in ('Available', 'Rented', 'Inactive')),
+  status text not null default 'Available' check (status in ('Available', 'Reserved', 'Rented', 'Inactive')),
   created_at timestamptz not null default now()
 );
 
@@ -61,6 +61,60 @@ create table if not exists property_images (
   created_at timestamptz not null default now()
 );
 
+create table if not exists property_applications (
+  application_id bigint generated always as identity primary key,
+  property_id bigint not null references properties(property_id) on delete cascade,
+  tenant_id bigint not null references tenants(tenant_id) on delete cascade,
+  status text not null default 'Interested' check (
+    status in (
+      'Interested',
+      'Shortlisted',
+      'Selected',
+      'Agreement Sent',
+      'Rejected',
+      'Withdrawn'
+    )
+  ),
+  message text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint property_applications_unique_interest unique (property_id, tenant_id)
+);
+
+create or replace function prevent_self_rental_applications()
+returns trigger
+language plpgsql
+as $$
+declare
+  property_owner_user_id bigint;
+  tenant_user_id bigint;
+begin
+  select o.user_id
+  into property_owner_user_id
+  from properties p
+  join owners o on o.owner_id = p.owner_id
+  where p.property_id = new.property_id;
+
+  select t.user_id
+  into tenant_user_id
+  from tenants t
+  where t.tenant_id = new.tenant_id;
+
+  if property_owner_user_id is not null
+    and tenant_user_id is not null
+    and property_owner_user_id = tenant_user_id then
+    raise exception 'Owner cannot apply to rent their own property';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_property_applications_prevent_self_rental on property_applications;
+create trigger trg_property_applications_prevent_self_rental
+before insert or update on property_applications
+for each row execute function prevent_self_rental_applications();
+
 create table if not exists rental_agreements (
   agreement_id bigint generated always as identity primary key,
   property_id bigint not null references properties(property_id) on delete cascade,
@@ -70,7 +124,16 @@ create table if not exists rental_agreements (
   deposit_amount numeric(12,2) not null default 0 check (deposit_amount >= 0),
   monthly_rent numeric(12,2) not null check (monthly_rent >= 0),
   police_verified boolean not null default false,
-  agreement_status text not null default 'Active' check (agreement_status in ('Active', 'Completed', 'Terminated')),
+  agreement_status text not null default 'Pending Owner' check (
+    agreement_status in (
+      'Pending Owner',
+      'Pending Tenant',
+      'Active',
+      'Completed',
+      'Rejected',
+      'Terminated'
+    )
+  ),
   created_at timestamptz not null default now(),
   constraint agreement_date_check check (end_date >= start_date)
 );
@@ -98,6 +161,9 @@ create table if not exists maintenance_requests (
 );
 
 create index if not exists idx_properties_city_status on properties(city, status);
+create index if not exists idx_property_applications_property on property_applications(property_id);
+create index if not exists idx_property_applications_tenant on property_applications(tenant_id);
+create index if not exists idx_property_applications_status on property_applications(status);
 create index if not exists idx_agreements_tenant on rental_agreements(tenant_id);
 create index if not exists idx_agreements_property on rental_agreements(property_id);
 create index if not exists idx_payments_agreement on rent_payments(agreement_id);

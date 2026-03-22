@@ -1,77 +1,70 @@
 import { requireUser } from "../core/auth.js";
-import supabaseClient from "../core/supabaseClient.js";
 import { listAgreements } from "../services/agreementService.js";
-import { listPayments } from "../services/paymentService.js";
+import { listApplications } from "../services/applicationService.js";
+import { getDueMonthsForAgreement, listPayments } from "../services/paymentService.js";
 import { listMaintenanceRequests } from "../services/maintenanceService.js";
-import { showToast } from "../utils/helpers.js";
 
 const user = await requireUser(["tenant"]);
 if (!user) throw new Error("Unauthorised");
 
-// ── Profile completion banner ─────────────────────────────────
-const profilePrompt       = document.getElementById("tenantProfilePrompt");
-const completeProfileForm = document.getElementById("completeProfileForm");
-const openBtn             = document.getElementById("openCompleteProfileBtn");
-const closeBtn            = document.getElementById("closeCompleteProfileBtn");
-const cancelBtn           = document.getElementById("cancelCompleteProfileBtn");
-const tenantForm          = document.getElementById("tenantCompleteForm");
+const applicationsTable = document.getElementById("tenantApplicationsTable");
+const upcomingPaymentMeta = document.getElementById("tenantUpcomingPaymentMeta");
+const payNowBtn = document.getElementById("tenantPayNowBtn");
 
-const profileComplete = Boolean(user.phone && user.city);
+function renderApplicationsTable(applications) {
+  if (!applicationsTable) return;
 
-function hideBanner() { profilePrompt.hidden = true; completeProfileForm.hidden = true; }
-function openForm()   { profilePrompt.hidden = true; completeProfileForm.hidden = false; }
-function closeForm()  { profilePrompt.hidden = !profileComplete; completeProfileForm.hidden = true; }
+  applicationsTable.innerHTML = applications.length
+    ? applications.map((application) => `
+        <tr>
+          <td>${application.properties?.title || application.properties?.address || "-"}</td>
+          <td>${application.properties?.owners?.users?.name || "-"}</td>
+          <td>${application.status || "-"}</td>
+          <td>${String(application.created_at || "").slice(0, 10) || "-"}</td>
+        </tr>
+      `).join("")
+    : "<tr><td colspan='4' class='table-empty-cell'><div class='empty-state'><h3>No interests yet</h3><p>Browse rentals and express interest to start your shortlist.</p></div></td></tr>";
+}
 
-if (!profileComplete && profilePrompt) profilePrompt.hidden = false;
-
-openBtn?.addEventListener("click",  openForm);
-closeBtn?.addEventListener("click", closeForm);
-cancelBtn?.addEventListener("click", closeForm);
-
-tenantForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const phone = document.getElementById("tenantPhone").value.trim();
-  const city  = document.getElementById("tenantCity").value.trim();
-
-  const saveBtn = document.getElementById("saveTenantProfileBtn");
-  saveBtn.disabled = true;
-  saveBtn.textContent = "Saving…";
-
-  const { error } = await supabaseClient
-    .from("tenants")
-    .upsert({ user_id: user.user_id, phone, city }, { onConflict: "user_id" });
-
-  saveBtn.disabled = false;
-  saveBtn.textContent = "Save & Continue";
-
-  if (error) {
-    showToast(error.message || "Failed to save profile", "error");
-    return;
-  }
-
-  const stored = JSON.parse(localStorage.getItem("appUser") || "{}");
-  localStorage.setItem("appUser", JSON.stringify({ ...stored, phone, city }));
-
-  showToast("Profile saved ✓", "success");
-  hideBanner();
-});
-
-// ── Dashboard stats ───────────────────────────────────────────
-const [{ data: agreements }, { data: payments }, { data: maintenance }] = await Promise.all([
+const [{ data: agreements }, { data: payments }, { data: maintenance }, applicationsResult] = await Promise.all([
   listAgreements(),
   listPayments(),
-  listMaintenanceRequests()
+  listMaintenanceRequests(),
+  listApplications({ tenantUserId: user.user_id })
 ]);
 
-const tenantAgreements   = (agreements  || []).filter((item) => item.tenants?.user_id === user.user_id);
-const activeAgreement    = tenantAgreements.find((item) => item.agreement_status === "Active");
-const tenantAgreementIds = new Set(tenantAgreements.map((item) => item.agreement_id));
-const tenantPayments     = (payments    || []).filter((item) => tenantAgreementIds.has(item.agreement_id));
-const tenantMaintenance  = (maintenance || []).filter((item) => tenantAgreementIds.has(item.agreement_id));
-const upcomingPayment    = tenantPayments[0]?.amount_paid || activeAgreement?.monthly_rent || 0;
+const applications = applicationsResult?.data || [];
+renderApplicationsTable(applications);
 
-document.getElementById("tenantActiveRental").textContent         = activeAgreement ? "1" : "0";
-document.getElementById("tenantUpcomingPayment").textContent      = `₹${Number(upcomingPayment).toLocaleString()}`;
-document.getElementById("tenantMaintenanceRequests").textContent  = String(tenantMaintenance.length);
-document.getElementById("tenantAgreementStatus").textContent      = activeAgreement?.agreement_status || "No Active Agreement";
-document.getElementById("tenantRecentNotifications").textContent  = String(tenantPayments.length + tenantMaintenance.length);
+const tenantAgreements = (agreements || []).filter((item) => item.tenants?.user_id === user.user_id);
+const activeAgreement = tenantAgreements.find((item) => item.agreement_status === "Active");
+const tenantAgreementIds = new Set(tenantAgreements.map((item) => item.agreement_id));
+const tenantPayments = (payments || []).filter((item) => tenantAgreementIds.has(item.agreement_id));
+const tenantMaintenance = (maintenance || []).filter((item) => tenantAgreementIds.has(item.agreement_id));
+const dueMonths = activeAgreement ? getDueMonthsForAgreement(
+  activeAgreement,
+  tenantPayments.filter((item) => Number(item.agreement_id) === Number(activeAgreement.agreement_id))
+) : [];
+const nextDueMonth = dueMonths[0] || "";
+const upcomingPayment = activeAgreement && nextDueMonth
+  ? Number(activeAgreement.monthly_rent || 0)
+  : 0;
+
+document.getElementById("tenantActiveRental").textContent = activeAgreement ? "1" : "0";
+document.getElementById("tenantUpcomingPayment").textContent = `Rs ${Number(upcomingPayment).toLocaleString()}`;
+document.getElementById("tenantMaintenanceRequests").textContent = String(tenantMaintenance.length);
+document.getElementById("tenantAgreementStatus").textContent = activeAgreement?.agreement_status || "No Active Agreement";
+document.getElementById("tenantRecentNotifications").textContent = String(applications.length);
+
+if (upcomingPaymentMeta) {
+  upcomingPaymentMeta.textContent = nextDueMonth
+    ? `Next due month: ${nextDueMonth}`
+    : "No payment due yet.";
+}
+
+if (payNowBtn) {
+  payNowBtn.hidden = !nextDueMonth;
+  if (nextDueMonth) {
+    payNowBtn.href = `../pages/payments.html?agreement=${activeAgreement.agreement_id}&month=${encodeURIComponent(nextDueMonth)}`;
+  }
+}

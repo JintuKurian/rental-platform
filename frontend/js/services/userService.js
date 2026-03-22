@@ -1,5 +1,41 @@
 import supabaseClient from "../core/supabaseClient.js";
 
+function normalizeRelation(value) {
+  if (Array.isArray(value)) return value[0] || null;
+  return value || null;
+}
+
+function normalizeUserRelation(record) {
+  const user = normalizeRelation(record?.users);
+  if (!record) return record;
+  return {
+    ...record,
+    users: user,
+    name: record.name || user?.name || null,
+    email: record.email || user?.email || null
+  };
+}
+
+async function attachUsers(records = []) {
+  const userIds = records.map((record) => Number(record.user_id)).filter(Boolean);
+  if (!userIds.length) return records.map((record) => ({ ...record, users: null }));
+
+  const { data: users, error } = await supabaseClient
+    .from("users")
+    .select("user_id,name,email")
+    .in("user_id", userIds);
+
+  if (error) {
+    return records.map((record) => normalizeUserRelation(record));
+  }
+
+  const usersById = new Map((users || []).map((user) => [Number(user.user_id), user]));
+  return records.map((record) => ({
+    ...record,
+    users: usersById.get(Number(record.user_id)) || normalizeRelation(record.users)
+  }));
+}
+
 function buildProfile(userData, roleData = null) {
   const phone = roleData?.phone || null;
   const city = roleData?.city || null;
@@ -17,9 +53,9 @@ async function getRoleProfileByUserId(userId, role) {
   if (role === "owner") {
     const { data, error } = await supabaseClient
       .from("owners")
-      .select("phone,address,city,owner_type")
+      .select("owner_id,user_id,phone,address,city,owner_type")
       .eq("user_id", Number(userId))
-      .single();
+      .maybeSingle();
 
     return { data, error };
   }
@@ -27,9 +63,9 @@ async function getRoleProfileByUserId(userId, role) {
   if (role === "tenant") {
     const { data, error } = await supabaseClient
       .from("tenants")
-      .select("phone,occupation,permanent_address,city")
+      .select("tenant_id,user_id,phone,aadhaar_no,occupation,permanent_address,city")
       .eq("user_id", Number(userId))
-      .single();
+      .maybeSingle();
 
     return { data, error };
   }
@@ -38,15 +74,37 @@ async function getRoleProfileByUserId(userId, role) {
 }
 
 export async function getOwners() {
-  return supabaseClient
+  const { data, error } = await supabaseClient
     .from("owners")
-    .select("owner_id,user_id,phone,address,city,owner_type,users(name,email)");
+    .select("owner_id,user_id,phone,address,city,owner_type")
+    .order("owner_id", { ascending: true });
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  const owners = await attachUsers(data || []);
+  return {
+    data: owners.map((owner) => normalizeUserRelation(owner)),
+    error: null
+  };
 }
 
 export async function getTenants() {
-  return supabaseClient
+  const { data, error } = await supabaseClient
     .from("tenants")
-    .select("tenant_id,user_id,phone,aadhaar_no,occupation,permanent_address,city,users(name,email)");
+    .select("tenant_id,user_id,phone,aadhaar_no,occupation,permanent_address,city")
+    .order("tenant_id", { ascending: true });
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  const tenants = await attachUsers(data || []);
+  return {
+    data: tenants.map((tenant) => normalizeUserRelation(tenant)),
+    error: null
+  };
 }
 
 export async function getOwnerByUserId(userId) {
@@ -81,7 +139,7 @@ export async function getAllUsers() {
       ? supabaseClient.from("owners").select("user_id,phone,address,city,owner_type").in("user_id", ownerUserIds)
       : Promise.resolve({ data: [], error: null }),
     tenantUserIds.length
-      ? supabaseClient.from("tenants").select("user_id,phone,occupation,permanent_address,city").in("user_id", tenantUserIds)
+      ? supabaseClient.from("tenants").select("user_id,phone,occupation,permanent_address,city,aadhaar_no").in("user_id", tenantUserIds)
       : Promise.resolve({ data: [], error: null })
   ]);
 
@@ -102,12 +160,28 @@ export async function getAllUsers() {
   };
 }
 
+export async function getUserById(userId) {
+  const parsedUserId = Number(userId);
+  const { data: userData, error: userError } = await supabaseClient
+    .from("users")
+    .select("user_id,name,email,role,auth_user_id")
+    .eq("user_id", parsedUserId)
+    .maybeSingle();
+
+  if (userError || !userData) return { data: null, error: userError };
+
+  const { data: roleData, error: roleError } = await getRoleProfileByUserId(parsedUserId, userData.role);
+  if (roleError) return { data: null, error: roleError };
+
+  return { data: buildProfile(userData, roleData), error: null };
+}
+
 export async function getUserByEmail(email) {
   const normalizedEmail = String(email || "").trim().toLowerCase();
 
   const { data: userData, error: userError } = await supabaseClient
     .from("users")
-    .select("user_id,name,email,role")
+    .select("user_id,name,email,role,auth_user_id")
     .eq("email", normalizedEmail)
     .single();
 
@@ -131,11 +205,22 @@ export async function getUserByAuthId(authUserId) {
 }
 
 export async function updateUserProfile(userId, payload) {
+  const safePayload = { ...payload };
+  Object.keys(safePayload).forEach((key) => {
+    if (safePayload[key] === undefined) {
+      delete safePayload[key];
+    }
+  });
+
+  if (!Object.keys(safePayload).length) {
+    return getUserById(userId);
+  }
+
   return supabaseClient
     .from("users")
-    .update(payload)
+    .update(safePayload)
     .eq("user_id", Number(userId))
-    .select("user_id,name,email,role")
+    .select("user_id,name,email,role,auth_user_id")
     .single();
 }
 
@@ -154,13 +239,16 @@ export async function saveOwnerProfile(userId, payload) {
 
   if (ownerError) return { data: null, error: ownerError };
 
-  const { error: userError } = await updateUserProfile(parsedUserId, {
-    name: payload.name
-  });
+  if (payload.name || payload.email) {
+    const { error: userError } = await updateUserProfile(parsedUserId, {
+      name: payload.name,
+      email: payload.email
+    });
 
-  if (userError) return { data: null, error: userError };
+    if (userError) return { data: null, error: userError };
+  }
 
-  return getUserByEmail(payload.email);
+  return getUserById(parsedUserId);
 }
 
 export async function saveTenantProfile(userId, payload) {
@@ -179,11 +267,14 @@ export async function saveTenantProfile(userId, payload) {
 
   if (tenantError) return { data: null, error: tenantError };
 
-  const { error: userError } = await updateUserProfile(parsedUserId, {
-    name: payload.name
-  });
+  if (payload.name || payload.email) {
+    const { error: userError } = await updateUserProfile(parsedUserId, {
+      name: payload.name,
+      email: payload.email
+    });
 
-  if (userError) return { data: null, error: userError };
+    if (userError) return { data: null, error: userError };
+  }
 
-  return getUserByEmail(payload.email);
+  return getUserById(parsedUserId);
 }

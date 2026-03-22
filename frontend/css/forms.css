@@ -132,6 +132,12 @@
 }
 .checkbox-inline input[type="checkbox"] { width: auto; margin: 0; }
 .checkbox-inline label { margin: 0; font-weight: 600; color: var(--text); }
+.helper-text {
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
 
 .toolbar { display: flex; gap: 0.9rem; flex-wrap: wrap; align-items: end; }
 .toolbar > * { flex: 1 1 180px; }
@@ -202,6 +208,39 @@ body.app-body.landing-page { padding-top: 0; }
 
 .hero-copy .actions-row { margin-top: 0.8rem; }
 .hero-copy .btn-primary { min-width: 175px; }
+
+/* ── Hero search bar (index.html → redirects to discover) ── */
+.hero-search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: flex-end;
+  margin-top: 1.4rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.hero-search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 160px;
+}
+.hero-search-field input,
+.hero-search-field select {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  min-width: 0;
+}
+.hero-search-bar button { align-self: flex-end; white-space: nowrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
 
 .search-bar {
   margin-top: 1rem;

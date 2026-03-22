@@ -3,74 +3,183 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Your Profile | NestFinder</title>
+  <title>Profile | NestFinder</title>
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <style>
+    .profile-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+    .profile-item {
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.1rem;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .profile-item.full { grid-column: 1 / -1; }
+    .profile-value {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.95rem;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      margin: 0;
+    }
+    .profile-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    /* editing state */
+    .profile-page-card.is-editing .profile-value { display: none; }
+    .profile-page-card.is-editing .profile-item { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-ring); }
+    .profile-page-card.is-editing input,
+    .profile-page-card.is-editing select { display: block !important; }
+  </style>
+  <style id="mobile-responsive">
+    /* ── Universal mobile responsiveness ── */
+
+    /* Tables: always scrollable, never squished */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background:
+        linear-gradient(to right, var(--surface) 30%, transparent),
+        linear-gradient(to left,  var(--surface) 30%, transparent) 100% 0,
+        radial-gradient(farthest-side at 0 50%, rgba(15,23,42,0.07), transparent),
+        radial-gradient(farthest-side at 100% 50%, rgba(15,23,42,0.07), transparent) 100% 0;
+      background-repeat: no-repeat;
+      background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%;
+      background-attachment: local, local, scroll, scroll;
+    }
+    .table-wrap table { min-width: 600px; }
+
+    @media (max-width: 600px) {
+      .page-shell  { margin-top: 0.75rem; margin-bottom: 1.5rem; }
+      .page-card   { padding: 1rem; }
+      .form-grid   { grid-template-columns: 1fr !important; }
+      .form-grid .full { grid-column: 1; }
+      .kpi-grid    { grid-template-columns: repeat(2, 1fr) !important; }
+      .dash-main   { padding: 0.85rem !important; }
+      .dash-section-head { padding: 0.85rem 1rem !important; }
+      .properties-grid,
+      .property-grid { grid-template-columns: 1fr !important; }
+      .profile-form-grid { grid-template-columns: 1fr !important; }
+      .dash-option-grid  { grid-template-columns: 1fr !important; }
+      .actions-row { flex-direction: column; }
+      .actions-row .btn { width: 100%; justify-content: center; }
+      .table-wrap th,
+      .table-wrap td { padding: 0.55rem 0.75rem; font-size: 0.82rem; }
+      .preview-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+      .preview-item img { width: 100%; height: 80px; }
+    }
+  </style>
 </head>
 <body class="app-body">
   <div class="utility-bar" id="dashboardNavbar"></div>
 
-  <main class="page-shell">
-    <section class="page-card profile-page-card">
+  <main class="page-shell content-stack">
 
-      <!-- Hero strip: avatar + name + role -->
-      <div class="profile-hero" id="profileHero">
-        <div class="profile-hero-avatar" id="profileHeroAvatar">?</div>
-        <div class="profile-hero-info">
-          <p class="profile-hero-name" id="profileHeroName">Loading…</p>
-          <span class="profile-hero-role" id="profileHeroRole">—</span>
-        </div>
+    <!-- Hero strip -->
+    <section class="profile-hero">
+      <div class="profile-hero-avatar" id="profileHeroAvatar">?</div>
+      <div class="profile-hero-info">
+        <h2 class="profile-hero-name" id="profileHeroName">Loading…</h2>
+        <span class="profile-hero-role" id="profileHeroRole"></span>
       </div>
+    </section>
 
-      <!-- Page head: title + action buttons -->
+    <!-- Profile card -->
+    <section class="page-card profile-page-card">
       <div class="profile-page-head">
         <div>
-          <h1 class="section-title">Your Profile</h1>
-          <p class="section-subtitle">View and manage your account information.</p>
+          <h2 class="section-title" style="margin-bottom:0.2rem">Your Profile</h2>
+          <p class="section-subtitle" style="margin-bottom:0">View and manage your account information.</p>
         </div>
-        <div class="actions-row profile-actions">
-          <button id="editProfileBtn"   class="btn btn-primary"   type="button">✏️ Edit Profile</button>
+        <div class="actions-row profile-actions" style="margin-top:0">
+          <button id="editProfileBtn"   class="btn btn-primary"   type="button" hidden>✏️ Edit Profile</button>
           <button id="saveProfileBtn"   class="btn btn-primary"   type="submit" form="profileForm" hidden>💾 Save Changes</button>
           <button id="cancelProfileBtn" class="btn btn-secondary" type="button" hidden>✕ Cancel</button>
-          <button id="logoutBtn"        class="btn btn-danger"    type="button">Sign Out</button>
+          <button id="logoutBtn"        class="btn btn-danger"    type="button">🚪 Sign Out</button>
         </div>
       </div>
 
-      <!-- Profile fields -->
-      <form id="profileForm" class="form-grid profile-grid">
+      <form id="profileForm" class="profile-form-grid" style="margin-top:1.25rem">
+
+        <!-- Always visible -->
         <div class="profile-item">
-          <label>Full Name</label>
-          <p id="profileNameView" class="profile-value"></p>
+          <label class="profile-label">Full Name</label>
+          <p class="profile-value" id="profileNameView"></p>
           <input id="profileName" type="text" readonly hidden />
         </div>
-
         <div class="profile-item">
-          <label>Email Address</label>
-          <p id="profileEmailView" class="profile-value"></p>
+          <label class="profile-label">Email Address</label>
+          <p class="profile-value" id="profileEmailView"></p>
           <input id="profileEmail" type="email" readonly hidden />
         </div>
-
         <div class="profile-item">
-          <label>Account Role</label>
-          <p id="profileRoleView" class="profile-value"></p>
+          <label class="profile-label">Dashboard Mode</label>
+          <p class="profile-value" id="profileRoleView"></p>
           <input id="profileRole" type="text" readonly hidden />
         </div>
-
         <div class="profile-item">
-          <label>Phone Number</label>
-          <p id="profilePhoneView" class="profile-value"></p>
-          <input id="profilePhone" type="text" placeholder="Enter phone number" required readonly hidden />
+          <label class="profile-label">Phone Number</label>
+          <p class="profile-value" id="profilePhoneView"></p>
+          <input id="profilePhone" type="tel" placeholder="Phone number" hidden />
+        </div>
+        <div class="profile-item">
+          <label class="profile-label">City</label>
+          <p class="profile-value" id="profileCityView"></p>
+          <input id="profileCity" type="text" placeholder="City" hidden />
         </div>
 
-        <div class="profile-item">
-          <label>City</label>
-          <p id="profileCityView" class="profile-value"></p>
-          <input id="profileCity" type="text" placeholder="Enter city" required readonly hidden />
+        <!-- Owner-only -->
+        <div class="profile-item" data-role="owner" hidden>
+          <label class="profile-label">Address</label>
+          <p class="profile-value" id="profileAddressView"></p>
+          <input id="profileAddress" type="text" placeholder="Full address" hidden />
         </div>
+        <div class="profile-item" data-role="owner" hidden>
+          <label class="profile-label">Owner Type</label>
+          <p class="profile-value" id="profileOwnerTypeView"></p>
+          <select id="profileOwnerType" hidden>
+            <option value="">Select type</option>
+            <option value="Individual">Individual</option>
+            <option value="Company">Company</option>
+            <option value="Agency">Agency</option>
+          </select>
+        </div>
+
+        <!-- Tenant-only -->
+        <div class="profile-item" data-role="tenant" hidden>
+          <label class="profile-label">Aadhaar Number</label>
+          <p class="profile-value" id="profileAadhaarView"></p>
+          <input id="profileAadhaar" type="text" placeholder="XXXX XXXX XXXX" maxlength="14" hidden />
+        </div>
+        <div class="profile-item" data-role="tenant" hidden>
+          <label class="profile-label">Occupation</label>
+          <p class="profile-value" id="profileOccupationView"></p>
+          <input id="profileOccupation" type="text" placeholder="Occupation" hidden />
+        </div>
+        <div class="profile-item full" data-role="tenant" hidden>
+          <label class="profile-label">Permanent Address</label>
+          <p class="profile-value" id="profilePermAddressView"></p>
+          <input id="profilePermAddress" type="text" placeholder="Permanent address" hidden />
+        </div>
+
       </form>
-
     </section>
+
   </main>
 
   <script type="module" src="../js/authGuard.js"></script>

@@ -1,32 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Terms & Conditions | Rental Platform</title>
+  <title>Terms & Conditions | NestFinder</title>
+  <meta name="description" content="Read the NestFinder terms and conditions for using our rental platform." />
   <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/assets/icons/site.webmanifest">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preload" href="/assets/css/style.css" as="style">
+  <link rel="preload" href="/assets/js/main.js" as="script">
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/forms.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <style>
+    .terms-section {
+      display: grid;
+      gap: 0.5rem;
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.2s;
+    }
+    .terms-section:hover { box-shadow: var(--shadow-md); }
+    .terms-section-num {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+    .terms-section h3 {
+      font-size: 1rem;
+      margin: 0 0 0.35rem;
+      color: var(--text);
+    }
+    .terms-section p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin: 0;
+    }
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+  </style>
 </head>
 <body class="app-body">
+
+  <!-- ── Sticky Nav ── -->
   <div class="utility-bar">
-    <nav class="landing-nav shell-panel">
-      <strong class="brand-mark">🏠 Rental Platform</strong>
-      <div class="landing-links">
+    <nav class="app-nav">
+      <a class="app-brand" href="../index.html">NestFinder</a>
+      <div class="app-links">
         <a href="../index.html">Home</a>
-        <a href="../pages/about.html">About</a>
-        <a href="../pages/discover.html">Discover</a>
-        <a href="../pages/terms.html">Terms</a>
+        <a href="./about.html">About</a>
+        <a href="./discover.html">Discover</a>
+        <a href="./terms.html" class="active">Terms</a>
       </div>
-      <div class="actions-row nav-actions">
-        <a id="loginBtn" class="btn btn-secondary" href="../pages/login.html">Login</a>
-        <a id="signupBtn" class="btn btn-primary" href="../pages/register.html">Sign up</a>
+      <div class="app-user-actions">
+        <a class="btn btn-secondary btn-sm" href="./login.html">Login</a>
+        <a class="btn btn-primary btn-sm" href="./register.html">Sign up</a>
       </div>
     </nav>
   </div>
+
   <main class="page-shell content-stack">
-    <section class="page-card"><h1 class="section-title">Terms & Conditions</h1><p class="section-subtitle">These terms outline safe and responsible use of Rental Platform for all participants.</p></section>
+
+    <!-- ── Hero ── -->
+    <section class="page-card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border:none;padding:3rem 2.5rem;">
+      <div style="max-width:60ch">
+        <p style="font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:0.75rem">Legal</p>
+        <h1 style="font-size:clamp(1.8rem,3.5vw,2.8rem);color:#fff;line-height:1.15;margin-bottom:1rem">Terms &amp; Conditions</h1>
+        <p style="color:rgba(255,255,255,0.65);font-size:0.92rem;line-height:1.75;margin:0">Last updated: March 2026 · These terms outline the rules and responsibilities for using NestFinder. By creating an account or using our platform, you agree to these terms.</p>
+      </div>
+    </section>
+
+    <!-- ── Terms sections ── -->
+    <section class="page-card">
+      <h2 class="section-title" style="margin-bottom:0.25rem">Platform terms</h2>
+      <p class="section-subtitle">Please read these carefully before using NestFinder.</p>
+      <div class="terms-grid">
+
+        <div class="terms-section">
+          <span class="terms-section-num">01</span>
+          <h3>Acceptance of terms</h3>
+          <p>By accessing or using NestFinder, you confirm that you are at least 18 years old and agree to be bound by these terms. If you do not agree, please do not use the platform.</p>
+        </div>
+
+        <div class="terms-section">
+          <span class="terms-section-num">02</span>
+          <h3>User accounts</h3>
+          <p>You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized access to your account. Each user may hold only one active account.</p>
+        </div>
+
+        <div class="terms-section">
+          <span class="terms-section-num">03</span>
+          <h3>Property listings</h3>
+          <p>Property owners are solely responsible for the accuracy of their listings. NestFinder reserves the right to remove any listing that is found to be misleading, fraudulent, or in violation of these terms.</p>
+        </div>
+
+        <div class="terms-section">
+          <span class="terms-section-num">04</span>
+          <h3>Rental agreements</h3>
+          <p>Agreements created through NestFinder are binding between the owner and tenant. NestFinder acts as a facilitator and is not a party to any rental agreement. Users are encouraged to review agreements carefully before approving.</p>
+        </div>
+
+        <div class="terms-section">
+          <span class="terms-section-num">05</span>
+          <h3>Payments</h3>
+          <p>All payments made through NestFinder are tracked and logged for transparency. Users are responsible for ensuring payments are accurate and timely. NestFinder does not process payments directly and is not liable for payment disputes.</p>
+        </div>
+
+        <div class="terms-section">
+          <span class="terms-section-num">06</span>
+          <h3>Prohibited conduct</h3>
+          <p>Users must not misuse the platform, submit false information, harass other users, or attempt to circumvent security measures. Violations may result in immediate account suspension or termination.</p>
+        </div>
+
+        <div class="terms-section">
+          <span class="terms-section-num">07</span>
+          <h3>Privacy &amp; data</h3>
+          <p>We collect only the data necessary to operate the platform. Your personal information is never sold to third parties. By using NestFinder, you consent to the collection and use of your data as described in our Privacy Policy.</p>
+        </div>
+
+        <div class="terms-section">
+          <span class="terms-section-num">08</span>
+          <h3>Limitation of liability</h3>
+          <p>NestFinder is provided "as is" without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from your use of the platform or any rental transactions conducted through it.</p>
+        </div>
+
+        <div class="terms-section">
+          <span class="terms-section-num">09</span>
+          <h3>Changes to terms</h3>
+          <p>We reserve the right to update these terms at any time. Continued use of the platform after changes are posted constitutes your acceptance of the revised terms. We will notify users of significant changes via email or platform notification.</p>
+        </div>
+
+        <div class="terms-section">
+          <span class="terms-section-num">10</span>
+          <h3>Contact us</h3>
+          <p>If you have any questions about these terms or how NestFinder operates, please reach out through your dashboard or contact our support team. We're committed to resolving concerns promptly and transparently.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section class="page-card" style="display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap">
+      <div>
+        <h2 class="section-title" style="margin-bottom:0.25rem">Questions about our terms?</h2>
+        <p class="section-subtitle" style="margin-bottom:0">We're happy to clarify anything before you get started.</p>
+      </div>
+      <div class="actions-row" style="margin-top:0">
+        <a class="btn btn-primary" href="./register.html">Create free account</a>
+        <a class="btn btn-secondary" href="./about.html">Learn more</a>
+      </div>
+    </section>
+
   </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer page-shell">
+    <p>© 2026 NestFinder · Transparent renting for everyone.</p>
+    <div style="display:flex;gap:1.25rem">
+      <a href="../index.html" style="font-size:0.85rem;color:var(--text-secondary);font-weight:500">Home</a>
+      <a href="./about.html" style="font-size:0.85rem;color:var(--text-secondary);font-weight:500">About</a>
+      <a href="./discover.html" style="font-size:0.85rem;color:var(--text-secondary);font-weight:500">Discover</a>
+    </div>
+  </footer>
+
   <script type="module" src="../js/authGuard.js"></script>
+  <script src="/assets/js/main.js" defer></script>
 </body>
 </html>
